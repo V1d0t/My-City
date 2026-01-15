@@ -21,6 +21,10 @@
     <button id="add-pin-btn" class="add-pin-btn">ADD PIN</button>
     <button id="locate-btn" title="ჩემი ადგილმდებარეობა"
         style="position: absolute; bottom: 100px; right: 10px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">🎯</button>
+    
+    <div class="logout-container">
+        <button onclick="logoutUser()" class="btn-logout">გამოსვლა</button>
+    </div>
 
     <div id="filter-container" class="filter-dropdown-wrapper">
         <button id="filter-toggle" class="filter-trigger">🔍 ფილტრი</button>
@@ -81,7 +85,7 @@
 
     <div id="media-viewer"
         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
-        <button onclick="closeMedia()"
+        <button id="close-media-btn"
             style="position:absolute; top:20px; right:20px; background:white; border:none; border-radius:50%; width:40px; height:40px; font-size:20px; cursor:pointer;">✕</button>
         <div id="media-content" style="max-width:90%; max-height:80%;"></div>
     </div>
@@ -154,8 +158,43 @@
         </div>
     </div>
 
-    <script>
-        // --- 1. CONFIGURATION ---
+    <script type="module">
+        // --- 1. FIREBASE INITIALIZATION ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
+            authDomain: "mycityapp-b26e4.firebaseapp.com",
+            projectId: "mycityapp-b26e4",
+            storageBucket: "mycityapp-b26e4.firebasestorage.app",
+            messagingSenderId: "318927416494",
+            appId: "1:318927416494:web:85d98e04ccd02899cf913f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Security Check
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                console.log("Logged in as:", user.email);
+                setTimeout(() => { map.invalidateSize(); }, 400);
+            }
+        });
+
+        // Global Logout
+        window.logoutUser = () => {
+            if (confirm("ნამდვილად გსურთ გასვლა?")) {
+                signOut(auth).then(() => {
+                    window.location.href = "index.html";
+                }).catch((error) => console.error("Logout Error:", error));
+            }
+        };
+
+        // --- 2. CONFIGURATION ---
         const GEORGIA_BOUNDS = [[41.056, 40.999], [43.760, 46.920]];
         const KUTAISI_CENTER = [42.2667, 42.7167];
         const EXPIRATION_TIME = 90 * 60 * 1000;
@@ -193,6 +232,7 @@
             "სპორტი": { color: "#166534", icon: "⚽", group: "social" }
         };
 
+        // --- 3. MAP SETUP ---
         const map = L.map('map', {
             maxBounds: GEORGIA_BOUNDS,
             maxBoundsViscosity: 1.0,
@@ -207,7 +247,7 @@
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // --- 2. STORAGE & TRACKING ---
+        // --- 4. DATA HANDLING ---
         let activeMarkers = [];
         let markerGroups = {};
 
@@ -221,82 +261,38 @@
             localStorage.setItem('mapPins', JSON.stringify(pins));
         }
 
-        function removePinFromStorage(id, lat, lng) {
+        window.removePinFromStorage = (id, lat, lng) => {
             let pins = getSavedPins();
             pins = pins.filter(p => p.id !== id);
             localStorage.setItem('mapPins', JSON.stringify(pins));
+            location.reload(); 
+        };
 
-            const posKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-            if (markerGroups[posKey] && markerGroups[posKey].markerInstance) {
-                map.removeLayer(markerGroups[posKey].markerInstance);
-                activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
-            }
-            delete markerGroups[posKey];
-
-            const pinsToRebuild = pins.filter(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}` === posKey);
-            pinsToRebuild.forEach(p => renderPin(p));
-            updateFilters();
-        }
-
-        function changePinStatus(id, newStatus) {
+        window.changePinStatus = (id, newStatus) => {
             let pins = getSavedPins();
-            const pinIndex = pins.findIndex(p => p.id === id);
-            if (pinIndex === -1) return;
-
-            const pin = pins[pinIndex];
-            const isOwner = (pin.user === "თქვენ");
-
-            const executeUpdate = () => {
+            const pin = pins.find(p => p.id === id);
+            if (pin) {
                 pin.status = newStatus;
-                if (!isOwner && !pin.description.includes("(განახლდა)")) {
-                    pin.description += ` (განახლდა)`;
-                }
                 localStorage.setItem('mapPins', JSON.stringify(pins));
-
-                const posKey = `${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}`;
-                if (markerGroups[posKey] && markerGroups[posKey].markerInstance) {
-                    map.removeLayer(markerGroups[posKey].markerInstance);
-                    activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
-                }
-                delete markerGroups[posKey];
-
-                const pinsAtThisSpot = pins.filter(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}` === posKey);
-                pinsAtThisSpot.forEach(p => renderPin(p));
-                map.closePopup();
-                updateFilters();
-            };
-
-            if (isOwner) {
-                executeUpdate();
-            } else {
-                const statusNames = { 0: "დაფიქსირებულია", 1: "მიმდინარეობს", 2: "მოგვარებულია" };
-                if (confirm(`გსურთ სტატუსის შეცვლა: "${statusNames[newStatus]}"?`)) {
-                    executeUpdate();
-                    alert("სტატუსი განახლდა!");
-                }
+                location.reload();
             }
-        }
+        };
 
         document.getElementById('clear-all-pins').onclick = () => {
             if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
                 localStorage.removeItem('mapPins');
-                activeMarkers.forEach(m => map.removeLayer(m));
-                activeMarkers = [];
-                markerGroups = {};
+                location.reload();
             }
         };
 
-        // --- 3. RENDERING ENGINE ---
+        // --- 5. RENDERING ---
         function renderPin(pinData) {
             const posKey = `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
             if (!markerGroups[posKey]) markerGroups[posKey] = [];
 
             const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
-            if (existingIndex !== -1) {
-                markerGroups[posKey][existingIndex] = pinData;
-            } else {
-                markerGroups[posKey].push(pinData);
-            }
+            if (existingIndex !== -1) markerGroups[posKey][existingIndex] = pinData;
+            else markerGroups[posKey].push(pinData);
 
             if (markerGroups[posKey].markerInstance) {
                 map.removeLayer(markerGroups[posKey].markerInstance);
@@ -311,12 +307,9 @@
             return marker;
         }
 
-        // --- 4. INTERFACE LOGIC ---
         function updateFilters() {
             const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
-            const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => {
-                return parseInt(cb.value.split('-')[1]);
-            });
+            const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => parseInt(cb.value.split('-')[1]));
 
             Object.keys(markerGroups).forEach(posKey => {
                 const group = markerGroups[posKey];
@@ -349,41 +342,23 @@
                     marker.setIcon(newIcon);
 
                     let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px; font-family: sans-serif;">`;
-                    if (visiblePins.length > 1) {
-                        popupHtml += `<div style="padding-bottom: 5px; border-bottom: 2px solid #eee; margin-bottom: 5px;"><strong>📍 ${visiblePins.length} შეტყობინება</strong></div>`;
-                    }
-
                     visiblePins.forEach((p) => {
                         const pConfig = categoryConfig[p.category];
-                        const pStat = STATUS_CONFIG[p.status || 0];
-                        const dCol = pStat.class === 'red' ? '#ef4444' : pStat.class === 'yellow' ? '#f59e0b' : '#22c55e';
-
                         popupHtml += `
-                    <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <span style="width:10px; height:10px; background:${dCol}; border-radius:50%; display:inline-block;"></span>
-                                <strong style="color: ${pConfig.color}; font-size: 14px;">${pConfig.icon} ${p.category}</strong>
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                            <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
+                            <p style="margin: 5px 0; font-size: 13px;">${p.description || '...'}</p>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                ${p.image ? `<button onclick="window.openMedia('${p.image}', 'img')" style="font-size:10px; cursor:pointer;">🖼️ ფოტო</button>` : ''}
                             </div>
-                            <span style="font-size: 10px; background: #f3f4f6; padding: 2px 6px; border-radius: 10px; color: #666;">👤 ${p.user || 'ანონიმი'}</span>
-                        </div>
-                        <small style="color: #888;">${p.timestamp}</small>
-                        <p style="margin: 8px 0; font-size: 13px; color: #333; line-height: 1.4;">${p.description || 'აღწერის გარეშე'}</p>
-                        
-                        <div style="display:flex; gap:5px; margin-bottom:10px;">
-                            ${p.image ? `<button onclick="openMedia('${p.image}', 'img')" style="background:#f3f4f6; border:1px solid #ddd; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🖼️ ნახე ფოტო</button>` : ''}
-                            ${p.video ? `<button onclick="openMedia('${p.video}', 'vid')" style="background:#f3f4f6; border:1px solid #ddd; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🎥 ნახე ვიდეო</button>` : ''}
-                        </div>
-
-                        <div style="display:flex; gap:8px; align-items: center;">
-                            <button onclick="changePinStatus('${p.id}', 0)" title="დაფიქსირებულია" style="cursor:pointer; background:none; border:none; font-size:16px;">🔴</button>
-                            <button onclick="changePinStatus('${p.id}', 1)" title="მიმდინარეობს" style="cursor:pointer; background:none; border:none; font-size:16px;">🟡</button>
-                            <button onclick="changePinStatus('${p.id}', 2)" title="მოგვარებულია" style="cursor:pointer; background:none; border:none; font-size:16px;">🟢</button>
-                            ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}', ${p.lat}, ${p.lng})" style="margin-left:auto; background:#fee2e2; color:#dc2626; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">წაშლა</button>` : ''}
-                        </div>
-                    </div>`;
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
+                                <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
+                                <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
+                                ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}', ${p.lat}, ${p.lng})" style="margin-left:auto; color:red;">წაშლა</button>` : ''}
+                            </div>
+                        </div>`;
                     });
-
                     popupHtml += `</div>`;
                     marker.bindPopup(popupHtml);
                     map.addLayer(marker);
@@ -393,27 +368,17 @@
             });
         }
 
-        // --- 4.5 INTERFACE LOGIC = = MEDIA VIEWER ---
-        function openMedia(url, type) {
+        // --- 6. UI ACTIONS ---
+        window.openMedia = (url, type) => {
             const viewer = document.getElementById('media-viewer');
             const content = document.getElementById('media-content');
             viewer.style.display = 'flex';
+            content.innerHTML = type === 'img' ? `<img src="${url}" style="max-width:100%; max-height:80vh;">` : `<video src="${url}" controls autoplay style="max-width:100%; max-height:80vh;"></video>`;
+        };
 
-            if (type === 'img') {
-                content.innerHTML = `<img src="${url}" style="max-width:100%; max-height:80vh; border-radius:8px; box-shadow:0 0 20px rgba(255,255,255,0.2);">`;
-            } else {
-                content.innerHTML = `<video src="${url}" controls autoplay style="max-width:100%; max-height:80vh; border-radius:8px;"></video>`;
-            }
-        }
-
-        function closeMedia() {
-            const viewer = document.getElementById('media-viewer');
-            document.getElementById('media-content').innerHTML = '';
-            viewer.style.display = 'none';
-        }
-
-        // --- 5. INITIALIZATION & EVENTS ---
-        document.querySelectorAll('.filter-check').forEach(cb => cb.addEventListener('change', updateFilters));
+        document.getElementById('close-media-btn').onclick = () => {
+            document.getElementById('media-viewer').style.display = 'none';
+        };
 
         const modal = document.getElementById('modal-overlay');
         const pinForm = document.getElementById('pin-form');
@@ -421,59 +386,39 @@
         document.getElementById('add-pin-btn').onclick = () => modal.classList.add('active');
         document.getElementById('cancel-btn').onclick = () => modal.classList.remove('active');
 
-pinForm.onsubmit = async (e) => {
-    e.preventDefault();
-    
-    const file = document.getElementById('file-input').files[0];
-    let fileData = null;
-    let fileType = null;
+        pinForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('media-input').files[0];
+            let fileData = null;
 
-    if (file) {
-        fileType = file.type.startsWith('image') ? 'img' : 'vid';
-        
-        // This part reads the file directly from the phone's camera/gallery
-        fileData = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    // This shrinks the photo size so it doesn't break the phone's memory
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; 
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 0.7 quality saves space
-                };
-                if (fileType === 'img') img.src = event.target.result;
-                else resolve(event.target.result); // Videos stay as they are
+            if (file) {
+                fileData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const pinData = {
+                id: Date.now().toString(),
+                lat: map.getCenter().lat,
+                lng: map.getCenter().lng,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                image: fileData,
+                status: 0,
+                user: "თქვენ",
+                timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+                rawTimestamp: Date.now()
             };
-            reader.readAsDataURL(file);
-        });
-    }
 
-    const pinData = {
-        id: Date.now().toString(),
-        lat: map.getCenter().lat,
-        lng: map.getCenter().lng,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        image: fileType === 'img' ? fileData : null,
-        video: fileType === 'vid' ? fileData : null,
-        status: 0,
-        user: "თქვენ",
-        timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-        rawTimestamp: Date.now()
-    };
+            renderPin(pinData);
+            savePinToStorage(pinData);
+            modal.classList.remove('active');
+            pinForm.reset();
+        };
 
-    renderPin(pinData);
-    savePinToStorage(pinData);
-    modal.classList.remove('active');
-    pinForm.reset();
-};
-
+        // --- 7. UTILS & INIT ---
         window.onload = () => {
             const now = Date.now();
             let pins = getSavedPins();
@@ -482,10 +427,17 @@ pinForm.onsubmit = async (e) => {
             validPins.forEach(renderPin);
         };
 
+        document.getElementById('locate-btn').onclick = () => {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const latlng = [pos.coords.latitude, pos.coords.longitude];
+                map.setView(latlng, 17);
+                L.circleMarker(latlng, { radius: 8, fillColor: "#3b82f6", color: "white" }).addTo(map);
+            });
+        };
+
         document.getElementById('search').addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
-                const query = e.target.value;
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=GE&limit=1`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}&countrycodes=GE&limit=1`);
                 const data = await res.json();
                 if (data[0]) map.setView([data[0].lat, data[0].lon], 17);
             }
@@ -493,49 +445,7 @@ pinForm.onsubmit = async (e) => {
 
         document.getElementById('filter-toggle').onclick = () => document.getElementById('filter-options').classList.toggle('hidden');
         document.getElementById('close-filter-btn').onclick = () => document.getElementById('filter-options').classList.add('hidden');
-        document.getElementById('description').addEventListener('input', (e) => {
-            document.getElementById('char-count').innerText = `${e.target.value.length} / 300`;
-        });
-
-        // --- 6. GEOLOCATION LOGIC ---
-        let userLocationMarker = null;
-
-        document.getElementById('locate-btn').onclick = () => {
-            if (!navigator.geolocation) {
-                alert("თქვენს ბრაუზერს არ აქვს GPS მხარდაჭერა");
-                return;
-            }
-
-            // Use high accuracy for better results on mobile
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                const latlng = [latitude, longitude];
-
-                // 1. Center the map on user
-                map.setView(latlng, 17);
-
-                // 2. Add or Move a blue dot to show where the user is
-                if (userLocationMarker) {
-                    userLocationMarker.setLatLng(latlng);
-                } else {
-                    userLocationMarker = L.circleMarker(latlng, {
-                        radius: 8,
-                        fillColor: "#3b82f6",
-                        color: "white",
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map).bindPopup("თქვენ აქ ხართ");
-                }
-            }, (error) => {
-                alert("ვერ მოხერხდა ადგილმდებარეობის დადგენა. გთხოვთ ჩართოთ GPS.");
-            }, {
-                enableHighAccuracy: true
-            });
-        };
-
+        document.querySelectorAll('.filter-check').forEach(cb => cb.addEventListener('change', updateFilters));
     </script>
-
 </body>
-
 </html>
