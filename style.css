@@ -230,3 +230,140 @@ body {
     }
 }
 
+/* Responsive enhancements (appended — keeps existing code intact) */
+
+/* General fluid typography and container sizing */
+.title {
+    font-size: clamp(1.8rem, 5vw, 3rem); /* scales between mobile and desktop */
+}
+
+.home-container {
+    max-width: 980px;
+    width: min(92%, 980px);
+    margin-inline: auto;
+}
+
+/* Stack auth buttons on smaller screens */
+.auth-buttons {
+    flex-wrap: wrap;
+}
+
+.btn {
+    min-width: 140px;
+}
+
+/* Make footer items more compact on medium screens */
+@media (max-width: 900px) {
+    .overlay {
+        padding-bottom: 120px; /* reduce the desktop offset so content remains centered on medium screens */
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .title {
+        font-size: 2.4rem;
+    }
+
+    .home-container {
+        padding: 32px 28px;
+    }
+
+    .auth-buttons {
+        gap: 14px;
+    }
+}
+
+/* Mobile adjustments: stack buttons, reduce paddings, make footer flow */
+@media (max-width: 600px) {
+
+    /* Keep your existing mobile block intact; these additions augment it */
+
+    .overlay {
+        padding-bottom: 40px; /* remove large push so center feels correct on small screens */
+        align-items: flex-start; /* allows content to sit above the footer area */
+        padding-top: 40px;
+    }
+
+    .home-container {
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .title {
+        font-size: 1.8rem;
+        margin-bottom: 18px;
+    }
+
+    .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+    }
+
+    .auth-buttons {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 12px 16px;
+        text-align: center;
+    }
+
+    /* Make footer scroll with content instead of covering it */
+    .main-footer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        padding: 18px 16px;
+        border-top: 2px solid #22c55e;
+    }
+
+    .footer-grid {
+        gap: 14px;
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    .footer-section h3 {
+        font-size: 1.25rem;
+    }
+
+    .footer-section p,
+    .footer-links a,
+    .social-icons a {
+        font-size: 0.9rem;
+    }
+
+    .footer-bottom {
+        font-size: 0.72rem;
+        margin-top: 12px;
+    }
+}
+
+/* Extra-small phones */
+@media (max-width: 420px) {
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .home-container {
+        padding: 16px;
+    }
+
+    .footer-links a {
+        font-size: 0.85rem;
+    }
+
+    .social-icons a {
+        margin-right: 12px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+}
