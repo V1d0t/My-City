@@ -293,3 +293,148 @@ select, textarea {
 .btn-logout:active {
     transform: translateY(0);
 }
+
+/* Responsive enhancements — append only once (keeps existing code intact) */
+
+/* General fluid adjustments */
+.filter-trigger,
+.back-home,
+.add-pin-btn,
+.logout-container,
+#search {
+    transition: all 0.18s ease;
+}
+
+/* Medium screens */
+@media (max-width: 900px) {
+    .filter-trigger { top: 64px; left: 8px; font-size: 12px; padding: 6px 12px; }
+    .filter-menu { top: 42px; left: 6px; width: 200px; }
+    .back-home { top: 12px; left: 12px; padding: 8px 12px; font-size: 13px; }
+    #search { width: 300px; top: 16px; }
+    .add-pin-btn { top: 12px; left: calc(50% + 160px); padding: 10px 14px; }
+    .logout-container { top: 12px; right: 12px; }
+    .crosshair { width: 26px; height: 26px; margin-left: -13px; margin-top: -13px; }
+    .pin-modal { max-width: 460px; padding: 20px; border-radius: 18px; }
+}
+
+/* Mobile - phones and small tablets */
+@media (max-width: 600px) {
+    /* Allow modest page flow on very small devices while keeping full-screen map feel */
+    html, body { overflow: hidden; } /* keep map fullscreen; modals and menus will handle scrolling */
+
+    /* Top controls stack & scale */
+    .back-home {
+        top: 12px;
+        left: 10px;
+        padding: 8px 10px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    /* Center search becomes fluid and narrower to fit on small screens */
+    #search {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 54px;
+        width: calc(100% - 120px); /* leave room for add-pin/logout buttons */
+        max-width: none;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    /* Place add-pin and logout on the right, stacked for easy tap targets */
+    .add-pin-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        left: auto;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .logout-container {
+        position: absolute;
+        top: 56px;
+        right: 12px;
+        z-index: 1000;
+    }
+
+    .btn-logout {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    /* Filter trigger and menu adapt to mobile: compact trigger and full-width dropdown */
+    .filter-trigger {
+        top: 100px;
+        left: 10px;
+        padding: 7px 10px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
+    .filter-menu {
+        position: absolute;
+        top: 140px;
+        left: 10px;
+        width: calc(100% - 20px);
+        max-width: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+    }
+
+    .filter-items label { padding: 10px 8px; font-size: 14px; }
+
+    /* Crosshair slightly smaller for cramped screens */
+    .crosshair {
+        width: 22px;
+        height: 22px;
+        margin-left: -11px;
+        margin-top: -11px;
+    }
+
+    /* Modal becomes bottom sheet by default (already handled) — ensure full-width on phones */
+    .pin-modal {
+        width: 100%;
+        max-width: 100%;
+        padding: 18px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-overlay { align-items: flex-end; }
+
+    /* Improve tap targets and readable text in modal */
+    .form-group { margin-bottom: 14px; }
+    label { font-size: 0.95rem; }
+    select, textarea, .modal-actions .btn-primary, .modal-actions .btn-secondary {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    /* Small visual tweaks for status list readability */
+    .status-item { gap: 8px; margin-bottom: 10px; }
+    .label-main { font-size: 13px; }
+    .label-sub { font-size: 11px; }
+
+    /* Ensure the map fill remains usable behind UI */
+    #map { height: 100vh; }
+
+    /* Hide non-critical shadows on small devices for performance */
+    .filter-menu, .add-pin-btn, .back-home { box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+}
+
+/* Extra-small phones */
+@media (max-width: 420px) {
+    #search { top: 62px; width: calc(100% - 112px); font-size: 13px; padding: 9px 10px; }
+    .filter-trigger { top: 118px; left: 8px; padding: 6px 8px; font-size: 12px; }
+    .filter-menu { top: 160px; left: 8px; width: calc(100% - 16px); padding: 8px; }
+    .add-pin-btn { top: 12px; right: 8px; padding: 9px 10px; font-size: 13px; }
+    .logout-container { top: 54px; right: 8px; }
+    .crosshair { width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; filter: drop-shadow(0 0 0.6px rgba(255,255,255,0.9)); }
+    .pin-modal { padding: 14px; border-radius: 16px 16px 0 0; }
+    .modal-actions { flex-direction: column; gap: 10px; }
+    .modal-actions .btn-primary, .modal-actions .btn-secondary { width: 100%; padding: 12px; }
+}
