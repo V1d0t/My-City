@@ -195,3 +195,142 @@ body {
     .page-wrapper { padding-bottom: 450px; } 
     .features-table { font-size: 0.8rem; }
 }
+
+
+/* Responsive enhancements — append only once (keeps existing code intact) */
+
+/* Fluid typography and spacing */
+.section-title {
+    font-size: clamp(1.4rem, 3.2vw, 2rem);
+}
+
+.glass-card {
+    padding: clamp(16px, 2.8vw, 40px);
+    max-width: 100%;
+    width: min(94%, 750px);
+}
+
+/* Terms/scroll area sizing */
+.terms-scroll-area {
+    max-height: clamp(220px, 38vh, 320px);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Make table horizontally scrollable on small screens while keeping layout on desktop */
+.features-table {
+    display: block;               /* allows overflow-x to work on small screens */
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.9rem;
+}
+
+/* Keep table internals visually consistent */
+.features-table th,
+.features-table td {
+    white-space: nowrap; /* prevents unwanted wrapping in tight spaces */
+}
+
+/* Buttons and links */
+.btn-primary {
+    padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 25px);
+    font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+}
+
+/* Medium screens */
+@media (max-width: 900px) {
+    .glass-card {
+        max-width: 700px;
+        padding: 20px;
+    }
+
+    .terms-scroll-area {
+        max-height: 40vh;
+    }
+
+    .features-table {
+        font-size: 0.88rem;
+    }
+}
+
+/* Mobile adjustments: phones and small tablets */
+@media (max-width: 600px) {
+    /* allow page vertical scrolling so long content can be read */
+    body { overflow: auto; }
+
+    .page-wrapper {
+        align-items: flex-start;
+        padding-top: 18px;
+        padding-bottom: 140px; /* room above footer on mobile */
+    }
+
+    .glass-card {
+        width: calc(100% - 32px);
+        margin: 0 16px;
+        padding: 14px;
+        border-radius: 10px;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+    }
+
+    .terms-scroll-area {
+        max-height: 50vh;
+        padding-right: 8px;
+    }
+
+    /* More compact table appearance, still scrollable horizontally */
+    .features-table {
+        font-size: 0.85rem;
+    }
+
+    .features-table th,
+    .features-table td {
+        padding: 10px 8px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        display: block;
+        margin-top: 12px;
+        font-size: 0.95rem;
+    }
+
+    .main-footer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        padding: 16px;
+        border-top: 2px solid #22c55e;
+    }
+}
+
+/* Extra-small phones */
+@media (max-width: 420px) {
+    .glass-card {
+        padding: 12px;
+        margin: 0 10px;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+    }
+
+    .terms-scroll-area {
+        max-height: 46vh;
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
+    .features-table th,
+    .features-table td {
+        padding: 8px 6px;
+    }
+
+    .btn-primary {
+        padding: 10px 14px;
+        font-size: 0.88rem;
+    }
+}
