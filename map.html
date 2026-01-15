@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ka">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ჩემი ქალაქი | რუკა</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="map.css">
+</head>
+
+<body>
+
+    <div id="map"></div>
+    <a href="index.html" class="back-home">← მთავარზე</a>
+    <input type="text" id="search" placeholder="მაგ: ქუთაისი, რუსთაველის გამზირი" />
+    <div class="crosshair"></div>
+    <button id="add-pin-btn" class="add-pin-btn">ADD PIN</button>
+    <button id="locate-btn" title="ჩემი ადგილმდებარეობა"
+        style="position: absolute; bottom: 100px; right: 10px; z-index: 1000; background: white; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">🎯</button>
+
+    <div id="filter-container" class="filter-dropdown-wrapper">
+        <button id="filter-toggle" class="filter-trigger">🔍 ფილტრი</button>
+
+        <div id="filter-options" class="filter-menu hidden">
+            <div class="filter-menu-header">
+                <span>კატეგორიები</span>
+                <button id="close-filter-btn">✕</button>
+            </div>
+            <div class="filter-items">
+                <label><input type="checkbox" class="filter-check" value="emergency" checked> 🚨 უსაფრთხოება</label>
+                <label><input type="checkbox" class="filter-check" value="roads" checked> 🚗 გზები</label>
+                <label><input type="checkbox" class="filter-check" value="infra" checked> 🏙️ სერვისები</label>
+                <label><input type="checkbox" class="filter-check" value="social" checked> 🎭 სოციალური</label>
+
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+
+                <span class="status-title"
+                    style="display: block; font-size: 11px; color: #22c55e; text-transform: uppercase; margin-bottom: 10px; font-weight: bold;">სტატუსის
+                    კონტროლი</span>
+
+                <label class="status-item">
+                    <input type="checkbox" class="filter-check" value="status-0" checked>
+                    <span class="dot red"></span>
+                    <div class="status-label-group">
+                        <span class="label-main">დაფიქსირებულია</span>
+                        <span class="label-sub">ახალი შეტყობინება</span>
+                    </div>
+                </label>
+
+                <label class="status-item">
+                    <input type="checkbox" class="filter-check" value="status-1" checked>
+                    <span class="dot yellow"></span>
+                    <div class="status-label-group">
+                        <span class="label-main">მიმდინარეობს</span>
+                        <span class="label-sub">მერია მუშაობს</span>
+                    </div>
+                </label>
+
+                <label class="status-item">
+                    <input type="checkbox" class="filter-check" value="status-2" checked>
+                    <span class="dot green"></span>
+                    <div class="status-label-group">
+                        <span class="label-main">მოგვარებულია</span>
+                        <span class="label-sub">ხარვეზი აღმოფხვრილია</span>
+                    </div>
+                </label>
+
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+
+                <button id="clear-all-pins"
+                    style="width: 100%; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px;">
+                    🗑️ ჩემი პინების გასუფთავება
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="media-viewer"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
+        <button onclick="closeMedia()"
+            style="position:absolute; top:20px; right:20px; background:white; border:none; border-radius:50%; width:40px; height:40px; font-size:20px; cursor:pointer;">✕</button>
+        <div id="media-content" style="max-width:90%; max-height:80%;"></div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div id="pin-modal" class="pin-modal">
+            <div class="modal-handle"></div>
+            <h2>ახალი შეტყობინება</h2>
+            <form id="pin-form">
+                <div class="form-group">
+                    <label for="category">კატეგორია *</label>
+                    <select id="category" required style="max-height: 200px; overflow-y: auto;">
+                        <option value="" disabled selected>აირჩიეთ კატეგორია...</option>
+                        <optgroup label="🚨 გადაუდებელი და უსაფრთხოება">
+                            <option value="პოლიცია">👮 პოლიცია</option>
+                            <option value="ხანძარი">🔥 ხანძარი</option>
+                            <option value="სასწრაფო">🚑 სასწრაფო დახმარება</option>
+                            <option value="საფრთხე">⚠️ კრიმინალური საფრთხე</option>
+                            <option value="ჩხუბი">👊 კონფლიქტი / ჩხუბი</option>
+                            <option value="ვანდალიზმი">🎨 ვანდალიზმი / გრაფიტი</option>
+                        </optgroup>
+                        <optgroup label="🚗 გზები და ტრანსპორტი">
+                            <option value="ავარია">🚗 ავტოსაგზაო შემთხვევა</option>
+                            <option value="საცობი">🚦 დიდი საცობი</option>
+                            <option value="გზა დაკეტილია">🚧 გზა დაკეტილია</option>
+                            <option value="ორმო">🕳️ ორმო გზაზე</option>
+                            <option value="ევაკუატორი">🚜 ევაკუატორი მუშაობს</option>
+                            <option value="მკვდარი ცხოველი">🐾 მკვდარი ცხოველი გზაზე</option>
+                            <option value="პარკინგი">🅿️ თავისუფალი პარკინგი</option>
+                        </optgroup>
+                        <optgroup label="🏙️ ინფრასტრუქტურა და კომუნალურები">
+                            <option value="ნაგავი">🗑️ ნაგვის დაგროვება</option>
+                            <option value="დაზიანება">💡 განათება არ მუშაობს</option>
+                            <option value="წყალი">💧 წყლის გაჟონვა / მილი</option>
+                            <option value="დენი">⚡ დენი არ არის</option>
+                            <option value="გაზი">💨 გაზის სუნი</option>
+                            <option value="ღია ჭა">🕳️ ღია საკანალიზაციო ჭა</option>
+                        </optgroup>
+                        <optgroup label="🎭 სოციალური და ცხოველები">
+                            <option value="ცხოველი">🐕 დაკარგული ცხოველი</option>
+                            <option value="აგრესიული ძაღლი">🐕‍🦺 აგრესიული ცხოველი</option>
+                            <option value="ღონისძიება">🎉 ფესტივალი / კონცერტი</option>
+                            <option value="აქცია">📢 საპროტესტო აქცია</option>
+                            <option value="სპორტი">⚽ სპორტული თამაში</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">აღწერა (მაქს. 300 სიმბოლო)</label>
+                    <textarea id="description" maxlength="300" placeholder="რა ხდება ამ ადგილას?"></textarea>
+                    <div id="char-count">0 / 300</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="file-label">
+                        <span>📷 ფოტოს/ვიდეოს დამატება</span>
+                        <input type="file" id="media-input" accept="image/*,video/*">
+                    </label>
+                    <div id="media-preview-container" class="hidden">
+                        <button type="button" id="remove-media">✕</button>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-btn" class="btn-secondary">გაუქმება</button>
+                    <button type="submit" class="btn-primary">დამატება</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        const GEORGIA_BOUNDS = [[41.056, 40.999], [43.760, 46.920]];
+        const KUTAISI_CENTER = [42.2667, 42.7167];
+        const EXPIRATION_TIME = 90 * 60 * 1000;
+
+        const STATUS_CONFIG = {
+            0: { label: "დაფიქსირებულია", class: "red" },
+            1: { label: "მიმდინარეობს", class: "yellow" },
+            2: { label: "მოგვარებულია", class: "green" }
+        };
+
+        const categoryConfig = {
+            "პოლიცია": { color: "#3b82f6", icon: "👮", group: "emergency" },
+            "ხანძარი": { color: "#b91c1c", icon: "🔥", group: "emergency" },
+            "სასწრაფო": { color: "#ef4444", icon: "🚑", group: "emergency" },
+            "საფრთხე": { color: "#7c3aed", icon: "⚠️", group: "emergency" },
+            "ჩხუბი": { color: "#991b1b", icon: "👊", group: "emergency" },
+            "ვანდალიზმი": { color: "#4f46e5", icon: "🎨", group: "emergency" },
+            "ავარია": { color: "#ef4444", icon: "🚗", group: "roads" },
+            "საცობი": { color: "#ea580c", icon: "🚦", group: "roads" },
+            "გზა დაკეტილია": { color: "#f59e0b", icon: "🚧", group: "roads" },
+            "ორმო": { color: "#4b5563", icon: "🕳️", group: "roads" },
+            "ევაკუატორი": { color: "#fbbf24", icon: "🚜", group: "roads" },
+            "მკვდარი ცხოველი": { color: "#78350f", icon: "🐾", group: "roads" },
+            "პარკინგი": { color: "#22c55e", icon: "🅿️", group: "roads" },
+            "ნაგავი": { color: "#84cc16", icon: "🗑️", group: "infra" },
+            "დაზიანება": { color: "#0891b2", icon: "💡", group: "infra" },
+            "წყალი": { color: "#3b82f6", icon: "💧", group: "infra" },
+            "დენი": { color: "#eab308", icon: "⚡", group: "infra" },
+            "გაზი": { color: "#f97316", icon: "💨", group: "infra" },
+            "ღია ჭა": { color: "#1f2937", icon: "🕳️", group: "infra" },
+            "ცხოველი": { color: "#d946ef", icon: "🐕", group: "social" },
+            "აგრესიული ძაღლი": { color: "#c026d3", icon: "🐕‍🦺", group: "social" },
+            "ღონისძიება": { color: "#10b981", icon: "🎉", group: "social" },
+            "აქცია": { color: "#1f2937", icon: "📢", group: "social" },
+            "სპორტი": { color: "#166534", icon: "⚽", group: "social" }
+        };
+
+        const map = L.map('map', {
+            maxBounds: GEORGIA_BOUNDS,
+            maxBoundsViscosity: 1.0,
+            minZoom: 12,
+            maxZoom: 18,
+            zoomControl: false
+        }).setView(KUTAISI_CENTER, 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // --- 2. STORAGE & TRACKING ---
+        let activeMarkers = [];
+        let markerGroups = {};
+
+        function getSavedPins() {
+            return JSON.parse(localStorage.getItem('mapPins')) || [];
+        }
+
+        function savePinToStorage(pin) {
+            const pins = getSavedPins();
+            pins.push(pin);
+            localStorage.setItem('mapPins', JSON.stringify(pins));
+        }
+
+        function removePinFromStorage(id, lat, lng) {
+            let pins = getSavedPins();
+            pins = pins.filter(p => p.id !== id);
+            localStorage.setItem('mapPins', JSON.stringify(pins));
+
+            const posKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+            if (markerGroups[posKey] && markerGroups[posKey].markerInstance) {
+                map.removeLayer(markerGroups[posKey].markerInstance);
+                activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
+            }
+            delete markerGroups[posKey];
+
+            const pinsToRebuild = pins.filter(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}` === posKey);
+            pinsToRebuild.forEach(p => renderPin(p));
+            updateFilters();
+        }
+
+        function changePinStatus(id, newStatus) {
+            let pins = getSavedPins();
+            const pinIndex = pins.findIndex(p => p.id === id);
+            if (pinIndex === -1) return;
+
+            const pin = pins[pinIndex];
+            const isOwner = (pin.user === "თქვენ");
+
+            const executeUpdate = () => {
+                pin.status = newStatus;
+                if (!isOwner && !pin.description.includes("(განახლდა)")) {
+                    pin.description += ` (განახლდა)`;
+                }
+                localStorage.setItem('mapPins', JSON.stringify(pins));
+
+                const posKey = `${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}`;
+                if (markerGroups[posKey] && markerGroups[posKey].markerInstance) {
+                    map.removeLayer(markerGroups[posKey].markerInstance);
+                    activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
+                }
+                delete markerGroups[posKey];
+
+                const pinsAtThisSpot = pins.filter(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}` === posKey);
+                pinsAtThisSpot.forEach(p => renderPin(p));
+                map.closePopup();
+                updateFilters();
+            };
+
+            if (isOwner) {
+                executeUpdate();
+            } else {
+                const statusNames = { 0: "დაფიქსირებულია", 1: "მიმდინარეობს", 2: "მოგვარებულია" };
+                if (confirm(`გსურთ სტატუსის შეცვლა: "${statusNames[newStatus]}"?`)) {
+                    executeUpdate();
+                    alert("სტატუსი განახლდა!");
+                }
+            }
+        }
+
+        document.getElementById('clear-all-pins').onclick = () => {
+            if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
+                localStorage.removeItem('mapPins');
+                activeMarkers.forEach(m => map.removeLayer(m));
+                activeMarkers = [];
+                markerGroups = {};
+            }
+        };
+
+        // --- 3. RENDERING ENGINE ---
+        function renderPin(pinData) {
+            const posKey = `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
+            if (!markerGroups[posKey]) markerGroups[posKey] = [];
+
+            const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
+            if (existingIndex !== -1) {
+                markerGroups[posKey][existingIndex] = pinData;
+            } else {
+                markerGroups[posKey].push(pinData);
+            }
+
+            if (markerGroups[posKey].markerInstance) {
+                map.removeLayer(markerGroups[posKey].markerInstance);
+                activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
+            }
+
+            const marker = L.marker([pinData.lat, pinData.lng]);
+            markerGroups[posKey].markerInstance = marker;
+            activeMarkers.push(marker);
+
+            updateFilters();
+            return marker;
+        }
+
+        // --- 4. INTERFACE LOGIC ---
+        function updateFilters() {
+            const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
+            const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => {
+                return parseInt(cb.value.split('-')[1]);
+            });
+
+            Object.keys(markerGroups).forEach(posKey => {
+                const group = markerGroups[posKey];
+                const marker = group.markerInstance;
+                if (!marker) return;
+
+                const visiblePins = [...group].reverse().filter(p => {
+                    const categoryMatch = checkedGroups.includes(categoryConfig[p.category].group);
+                    const statusMatch = checkedStatuses.includes(p.status || 0);
+                    return categoryMatch && statusMatch;
+                });
+
+                if (visiblePins.length > 0) {
+                    const topPin = visiblePins[0];
+                    const config = categoryConfig[topPin.category];
+                    const pStatus = STATUS_CONFIG[topPin.status || 0];
+                    const dotCol = pStatus.class === 'red' ? '#ef4444' : pStatus.class === 'yellow' ? '#f59e0b' : '#22c55e';
+
+                    const newIcon = L.divIcon({
+                        className: 'custom-pin',
+                        html: `<div style="background-color: ${config.color}; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+                        <span style="transform: rotate(45deg); font-size: 20px;">${config.icon}</span>
+                        <div style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:${dotCol}; border-radius:50%; border:2px solid white; transform:rotate(45deg);"></div>
+                        ${visiblePins.length > 1 ? `<div style="position:absolute; top:-5px; right:-5px; background:black; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; transform:rotate(45deg); border:1px solid white;">${visiblePins.length}</div>` : ''}
+                       </div>`,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 36]
+                    });
+
+                    marker.setIcon(newIcon);
+
+                    let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px; font-family: sans-serif;">`;
+                    if (visiblePins.length > 1) {
+                        popupHtml += `<div style="padding-bottom: 5px; border-bottom: 2px solid #eee; margin-bottom: 5px;"><strong>📍 ${visiblePins.length} შეტყობინება</strong></div>`;
+                    }
+
+                    visiblePins.forEach((p) => {
+                        const pConfig = categoryConfig[p.category];
+                        const pStat = STATUS_CONFIG[p.status || 0];
+                        const dCol = pStat.class === 'red' ? '#ef4444' : pStat.class === 'yellow' ? '#f59e0b' : '#22c55e';
+
+                        popupHtml += `
+                    <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="width:10px; height:10px; background:${dCol}; border-radius:50%; display:inline-block;"></span>
+                                <strong style="color: ${pConfig.color}; font-size: 14px;">${pConfig.icon} ${p.category}</strong>
+                            </div>
+                            <span style="font-size: 10px; background: #f3f4f6; padding: 2px 6px; border-radius: 10px; color: #666;">👤 ${p.user || 'ანონიმი'}</span>
+                        </div>
+                        <small style="color: #888;">${p.timestamp}</small>
+                        <p style="margin: 8px 0; font-size: 13px; color: #333; line-height: 1.4;">${p.description || 'აღწერის გარეშე'}</p>
+                        
+                        <div style="display:flex; gap:5px; margin-bottom:10px;">
+                            ${p.image ? `<button onclick="openMedia('${p.image}', 'img')" style="background:#f3f4f6; border:1px solid #ddd; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🖼️ ნახე ფოტო</button>` : ''}
+                            ${p.video ? `<button onclick="openMedia('${p.video}', 'vid')" style="background:#f3f4f6; border:1px solid #ddd; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">🎥 ნახე ვიდეო</button>` : ''}
+                        </div>
+
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <button onclick="changePinStatus('${p.id}', 0)" title="დაფიქსირებულია" style="cursor:pointer; background:none; border:none; font-size:16px;">🔴</button>
+                            <button onclick="changePinStatus('${p.id}', 1)" title="მიმდინარეობს" style="cursor:pointer; background:none; border:none; font-size:16px;">🟡</button>
+                            <button onclick="changePinStatus('${p.id}', 2)" title="მოგვარებულია" style="cursor:pointer; background:none; border:none; font-size:16px;">🟢</button>
+                            ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}', ${p.lat}, ${p.lng})" style="margin-left:auto; background:#fee2e2; color:#dc2626; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">წაშლა</button>` : ''}
+                        </div>
+                    </div>`;
+                    });
+
+                    popupHtml += `</div>`;
+                    marker.bindPopup(popupHtml);
+                    map.addLayer(marker);
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+        }
+
+        // --- 4.5 INTERFACE LOGIC = = MEDIA VIEWER ---
+        function openMedia(url, type) {
+            const viewer = document.getElementById('media-viewer');
+            const content = document.getElementById('media-content');
+            viewer.style.display = 'flex';
+
+            if (type === 'img') {
+                content.innerHTML = `<img src="${url}" style="max-width:100%; max-height:80vh; border-radius:8px; box-shadow:0 0 20px rgba(255,255,255,0.2);">`;
+            } else {
+                content.innerHTML = `<video src="${url}" controls autoplay style="max-width:100%; max-height:80vh; border-radius:8px;"></video>`;
+            }
+        }
+
+        function closeMedia() {
+            const viewer = document.getElementById('media-viewer');
+            document.getElementById('media-content').innerHTML = '';
+            viewer.style.display = 'none';
+        }
+
+        // --- 5. INITIALIZATION & EVENTS ---
+        document.querySelectorAll('.filter-check').forEach(cb => cb.addEventListener('change', updateFilters));
+
+        const modal = document.getElementById('modal-overlay');
+        const pinForm = document.getElementById('pin-form');
+
+        document.getElementById('add-pin-btn').onclick = () => modal.classList.add('active');
+        document.getElementById('cancel-btn').onclick = () => modal.classList.remove('active');
+
+pinForm.onsubmit = async (e) => {
+    e.preventDefault();
+    
+    const file = document.getElementById('file-input').files[0];
+    let fileData = null;
+    let fileType = null;
+
+    if (file) {
+        fileType = file.type.startsWith('image') ? 'img' : 'vid';
+        
+        // This part reads the file directly from the phone's camera/gallery
+        fileData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // This shrinks the photo size so it doesn't break the phone's memory
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 0.7 quality saves space
+                };
+                if (fileType === 'img') img.src = event.target.result;
+                else resolve(event.target.result); // Videos stay as they are
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const pinData = {
+        id: Date.now().toString(),
+        lat: map.getCenter().lat,
+        lng: map.getCenter().lng,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        image: fileType === 'img' ? fileData : null,
+        video: fileType === 'vid' ? fileData : null,
+        status: 0,
+        user: "თქვენ",
+        timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+        rawTimestamp: Date.now()
+    };
+
+    renderPin(pinData);
+    savePinToStorage(pinData);
+    modal.classList.remove('active');
+    pinForm.reset();
+};
+
+        window.onload = () => {
+            const now = Date.now();
+            let pins = getSavedPins();
+            const validPins = pins.filter(pin => (now - (pin.rawTimestamp || 0)) < EXPIRATION_TIME);
+            localStorage.setItem('mapPins', JSON.stringify(validPins));
+            validPins.forEach(renderPin);
+        };
+
+        document.getElementById('search').addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const query = e.target.value;
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=GE&limit=1`);
+                const data = await res.json();
+                if (data[0]) map.setView([data[0].lat, data[0].lon], 17);
+            }
+        });
+
+        document.getElementById('filter-toggle').onclick = () => document.getElementById('filter-options').classList.toggle('hidden');
+        document.getElementById('close-filter-btn').onclick = () => document.getElementById('filter-options').classList.add('hidden');
+        document.getElementById('description').addEventListener('input', (e) => {
+            document.getElementById('char-count').innerText = `${e.target.value.length} / 300`;
+        });
+
+        // --- 6. GEOLOCATION LOGIC ---
+        let userLocationMarker = null;
+
+        document.getElementById('locate-btn').onclick = () => {
+            if (!navigator.geolocation) {
+                alert("თქვენს ბრაუზერს არ აქვს GPS მხარდაჭერა");
+                return;
+            }
+
+            // Use high accuracy for better results on mobile
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                const latlng = [latitude, longitude];
+
+                // 1. Center the map on user
+                map.setView(latlng, 17);
+
+                // 2. Add or Move a blue dot to show where the user is
+                if (userLocationMarker) {
+                    userLocationMarker.setLatLng(latlng);
+                } else {
+                    userLocationMarker = L.circleMarker(latlng, {
+                        radius: 8,
+                        fillColor: "#3b82f6",
+                        color: "white",
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map).bindPopup("თქვენ აქ ხართ");
+                }
+            }, (error) => {
+                alert("ვერ მოხერხდა ადგილმდებარეობის დადგენა. გთხოვთ ჩართოთ GPS.");
+            }, {
+                enableHighAccuracy: true
+            });
+        };
+
+    </script>
+
+</body>
+
+</html>

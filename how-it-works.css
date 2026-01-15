@@ -1,0 +1,197 @@
+/* --- GLOBAL STYLES (MATCHED TO YOUR TEMPLATE) --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    height: 100vh;
+    background-image: url("IMG/HPBGmap.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden; 
+}
+
+/* --- WRAPPER LOGIC --- */
+.page-wrapper {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    padding-bottom: 200px; 
+}
+
+/* --- GLASS CARD --- */
+.glass-card {
+    text-align: left; 
+    padding: 30px 40px;
+    background: rgba(20, 40, 30, 0.55);
+    border-radius: 12px;
+    border: 1px solid rgba(120, 200, 160, 0.3);
+    max-width: 750px; /* Slightly wider for the table */
+    width: 90%;
+    color: white;
+}
+
+.section-title { 
+    color: #f0fdf4;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.terms-scroll-area {
+    max-height: 320px; 
+    overflow-y: auto;
+    padding-right: 15px;
+}
+
+/* Scrollbar styling */
+.terms-scroll-area::-webkit-scrollbar { width: 4px; }
+.terms-scroll-area::-webkit-scrollbar-thumb { background: #22c55e; }
+
+.terms-scroll-area h3 {
+    color: #22c55e;
+    font-size: 1.15rem;
+    margin: 20px 0 10px 0;
+}
+
+.terms-scroll-area p {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+/* --- TABLE STYLING --- */
+.features-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.9rem;
+}
+
+.features-table th, .features-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.features-table th {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.features-table td { color: #cbd5e1; }
+
+/* --- BUTTONS --- */
+.btn-primary {
+    text-decoration: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: 0.3s ease;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    margin-top: 15px;
+    display: inline-block;
+}
+
+.btn-primary:hover { background: #15803d; }
+
+.back-link {
+    color: #bbf7d0;
+    text-decoration: none;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* --- FOOTER (EXACT MATCH) --- */
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    padding: 20px 20px 10px 20px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    border-top: 3px solid #22c55e;
+    z-index: 1000;
+}
+
+.footer-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.footer-section h3 { color: #22c55e; margin-bottom: 15px; font-size: 1.5rem; font-weight: bold; }
+.footer-section h4 { color: #94a3b8; margin-bottom: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+
+/* SPACING FOR CONTACT INFO */
+.footer-section p {
+    font-size: 0.95rem;
+    line-height: 1.8; 
+    color: #cbd5e1;
+    margin: 12px 0;
+}
+
+.footer-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.footer-link:hover { color: #22c55e; }
+
+.footer-link-icon { width: 14px; height: 14px; margin-left: 8px; opacity: 0.6; }
+
+.social-icons a {
+    display: inline-block;
+    color: #cbd5e1;
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 4px;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .page-wrapper { padding-bottom: 450px; } 
+    .features-table { font-size: 0.8rem; }
+}

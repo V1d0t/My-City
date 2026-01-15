@@ -1,0 +1,232 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    height: 100vh;
+    background-image: url("IMG/HPBGmap.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+
+/* Opacity layer */
+.overlay {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    padding-bottom: 200px; /* This pushes the central box up so it's perfectly centered above the footer */
+}
+
+.subtitle {
+    color: #bbf7d0; /* soft green for eco-friendly feel */
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+    opacity: 0.9;
+}
+
+
+.home-container {
+    text-align: center;
+    padding: 40px 50px;
+    background: rgba(20, 40, 30, 0.55); /* deep green tint */
+    border-radius: 12px;
+    border: 1px solid rgba(120, 200, 160, 0.3);
+}
+
+
+.title {
+    color: #f0fdf4; /* eco white */
+    font-size: 3rem;
+    margin-bottom: 30px;
+}
+
+.title span {
+    font-size: 1.8rem;
+    color: #bbf7d0; /* soft green */
+}
+
+
+.auth-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.btn {
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: 0.3s ease;
+}
+
+/* Login – neutral eco */
+.login {
+    background: #ecfdf5; /* light mint */
+    color: #064e3b; /* deep green */
+}
+
+.login:hover {
+    background: #d1fae5;
+}
+
+/* Register – primary eco action */
+.register {
+    background: #16a34a; /* natural green */
+    color: #ffffff;
+}
+
+.register:hover {
+    background: #15803d;
+}
+
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.95); /* High opacity so text is clear */
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    padding: 20px 20px 10px 20px; /* Tightened padding */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    border-top: 3px solid #22c55e;
+    z-index: 1000;
+}
+
+/* Adjust the footer-grid slightly to be more compact for immediate viewing */
+.footer-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.footer-section h3 {
+    color: #22c55e; /* Green accent */
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.footer-section h4 {
+    color: #94a3b8; /* Muted gray-blue for subheaders */
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.footer-section p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin: 8px 0;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #22c55e;
+    padding-left: 5px; /* Subtle slide effect on hover */
+}
+
+/* Container for the links to stack them vertically */
+.footer-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* The link itself */
+.footer-link {
+    display: flex;
+    align-items: center; /* Vertical alignment */
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+/* The specific SVG icon styling */
+.footer-link-icon {
+    width: 14px;
+    height: 14px;
+    margin-left: 8px; /* Space between text and icon */
+    opacity: 0.6;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hover effects */
+.footer-link:hover {
+    color: #22c55e;
+}
+
+.footer-link:hover .footer-link-icon {
+    opacity: 1;
+    color: #22c55e;
+    transform: translate(2px, -2px); /* Makes the arrow "pop" out slightly */
+}
+
+.social-icons a {
+    display: inline-block;
+    color: #cbd5e1;
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.social-icons a:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border-color: #22c55e;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px; /* Reduced from 50px */
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    .footer-links a:hover {
+        padding-left: 0;
+    }
+}
+

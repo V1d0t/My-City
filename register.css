@@ -1,0 +1,184 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    height: 100vh;
+    background-image: url("IMG/HPBGmap.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+/* Opacity layer */
+.overlay {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    /* This pushes the registration box up so it stays centered above the footer */
+    padding-bottom: 220px; 
+}
+
+.home-container {
+    text-align: center;
+    padding: 30px 40px;
+    background: rgba(20, 40, 30, 0.75);
+    border-radius: 12px;
+    border: 1px solid rgba(120, 200, 160, 0.3);
+    width: 100%;
+    max-width: 400px;
+    margin: 20px;
+}
+
+.title {
+    color: #f0fdf4;
+    font-size: 2.5rem; /* Matched for consistency */
+    margin-bottom: 25px;
+}
+
+.subtitle {
+    color: #bbf7d0;
+    font-size: 1rem; /* Slightly smaller to fit the longer text */
+    margin-top: 15px;
+    opacity: 0.9;
+}
+
+.form input {
+    width: 100%;
+    padding: 10px; /* Slightly tighter to fit more fields */
+    margin-bottom: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.btn {
+    width: 100%; /* Full width button */
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: 0.3s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.register {
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.register:hover {
+    background: #15803d;
+}
+
+/* FIXED FOOTER STYLES - Synchronized with Homepage */
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    padding: 30px 20px 15px 20px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    border-top: 3px solid #22c55e;
+    z-index: 1000;
+}
+
+.footer-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.footer-section h3 {
+    color: #22c55e;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.footer-section h4 {
+    color: #94a3b8;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.footer-section p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+}
+
+.footer-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+    color: #22c55e;
+    padding-left: 5px;
+}
+
+.footer-link-icon {
+    width: 14px;
+    height: 14px;
+    margin-left: 8px;
+    opacity: 0.6;
+}
+
+.social-icons a {
+    display: inline-block;
+    color: #cbd5e1;
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.social-icons a:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border-color: #22c55e;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .overlay { padding-bottom: 400px; } /* More room for stacked mobile footer */
+}
