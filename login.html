@@ -73,5 +73,55 @@
     </div>
 </footer>
 
+<script type="module">
+    // 1. Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // 2. Your Config (Matches your project)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
+        authDomain: "mycityapp-b26e4.firebaseapp.com",
+        projectId: "mycityapp-b26e4",
+        storageBucket: "mycityapp-b26e4.firebasestorage.app",
+        messagingSenderId: "318927416494",
+        appId: "1:318927416494:web:85d98e04ccd02899cf913f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 3. Handle Login
+    const loginForm = document.querySelector('.form'); // Finds your existing form class
+    
+    // Assign IDs to your inputs in the HTML or we can grab them like this:
+    const emailInput = loginForm.querySelector('input[type="email"]');
+    const passInput = loginForm.querySelector('input[type="password"]');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Stop page from refreshing
+
+        const email = emailInput.value;
+        const password = passInput.value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // SUCCESS! Redirect to your map page
+            // Change 'map.html' to whatever your map file is named (e.g., index.html)
+            window.location.href = "map.html"; 
+        } catch (error) {
+            console.error(error);
+            // Translate common Firebase errors for your users
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                alert("მონაცემები არასწორია. გთხოვთ სცადოთ თავიდან.");
+            } else if (error.code === 'auth/invalid-credential') {
+                 alert("მონაცემები არასწორია.");
+            } else {
+                alert("დაფიქსირდა შეცდომა: " + error.message);
+            }
+        }
+    });
+</script>
+
 </body>
 </html>
