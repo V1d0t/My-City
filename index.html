@@ -72,5 +72,33 @@
     </div>
 </footer>
 
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
+        authDomain: "mycityapp-b26e4.firebaseapp.com",
+        projectId: "mycityapp-b26e4",
+        storageBucket: "mycityapp-b26e4.firebasestorage.app",
+        messagingSenderId: "318927416494",
+        appId: "1:318927416494:web:85d98e04ccd02899cf913f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // If already logged in, change the "Login" button to "Go to Map"
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            const loginBtn = document.querySelector('.btn.login');
+            if (loginBtn) {
+                loginBtn.textContent = "რუკაზე გადასვლა";
+                loginBtn.href = "map.html";
+            }
+        }
+    });
+</script>
+
 </body>
 </html>
