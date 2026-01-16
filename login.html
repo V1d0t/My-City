@@ -13,7 +13,7 @@
         <h1 class="title">შესვლა</h1>
 
         <form class="form">
-            <input type="email" placeholder="ელ. ფოსტა" required maxlength="50">
+            <input type="email" id="email" placeholder="ელ. ფოსტა" required maxlength="50">
             <input type="password" placeholder="პაროლი" required minlength="8" maxlength="30">
             <button type="submit" class="btn register">შესვლა</button>
         </form>
@@ -21,6 +21,10 @@
         <p class="subtitle">
             დაბრუნება <a href="index.html" style="color:#bbf7d0;">მთავარ გვერდზე</a>
         </p>
+<div class="auth-actions">
+    <button type="button" id="forgot-password-btn" class="btn-link">დაგავიწყდათ პაროლი?</button>
+</div>
+
     </div>
 </div>
 
@@ -76,8 +80,7 @@
 <script type="module">
     // 1. Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     // 2. Your Config (Matches your project)
     const firebaseConfig = {
         apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
@@ -121,6 +124,28 @@
             }
         }
     });
+
+// 4. Handle Password Reset
+    document.getElementById('forgot-password-btn').onclick = (e) => {
+        e.preventDefault(); 
+        
+        // This looks for the id="email" we just added above
+        const emailField = document.getElementById('email').value;
+
+        if (!emailField) {
+            alert("გთხოვთ, ჯერ შეიყვანოთ ელ-ფოსტა.");
+            return;
+        }
+
+        sendPasswordResetEmail(auth, emailField)
+            .then(() => {
+                alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტის Spam ფოლდერი, თუ არ ჩანს.");
+            })
+            .catch((error) => {
+                alert("შეცდომა: " + error.message);
+            });
+    }; 
+    
 </script>
 
 </body>

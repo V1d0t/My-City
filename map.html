@@ -261,112 +261,147 @@
             localStorage.setItem('mapPins', JSON.stringify(pins));
         }
 
-        window.removePinFromStorage = (id, lat, lng) => {
-            let pins = getSavedPins();
-            pins = pins.filter(p => p.id !== id);
+// helper: rebuild markers from localStorage without reloading page
+function rebuildMarkersFromStorage() {
+    // 1. Remove markers from map
+    Object.keys(markerGroups).forEach(key => {
+        if (markerGroups[key].markerInstance) {
+            map.removeLayer(markerGroups[key].markerInstance);
+        }
+    });
+
+    // 2. Clear the memory
+    markerGroups = {};
+    activeMarkers = [];
+
+    // 3. Re-render everything from scratch
+    const pins = getSavedPins();
+    pins.forEach(p => renderPin(p));
+    
+    updateFilters();
+}
+
+    // replace removePinFromStorage: no full reload 
+    window.removePinFromStorage = (id) => {
+        let pins = getSavedPins();
+        pins = pins.filter(p => p.id !== id);
+        localStorage.setItem('mapPins', JSON.stringify(pins));
+        rebuildMarkersFromStorage();
+    };
+
+    // replace changePinStatus: update storage and refresh markers without reload
+    window.changePinStatus = (id, newStatus) => {
+        let pins = getSavedPins();
+        const pin = pins.find(p => p.id === id);
+        if (pin) {
+            pin.status = newStatus;
             localStorage.setItem('mapPins', JSON.stringify(pins));
-            location.reload(); 
-        };
+            rebuildMarkersFromStorage();
+        }
+    };
 
-        window.changePinStatus = (id, newStatus) => {
-            let pins = getSavedPins();
-            const pin = pins.find(p => p.id === id);
-            if (pin) {
-                pin.status = newStatus;
-                localStorage.setItem('mapPins', JSON.stringify(pins));
-                location.reload();
-            }
-        };
-
-        document.getElementById('clear-all-pins').onclick = () => {
-            if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
-                localStorage.removeItem('mapPins');
-                location.reload();
-            }
-        };
+    // change clear-all-pins handler to avoid reload
+    document.getElementById('clear-all-pins').onclick = () => {
+        if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
+            localStorage.removeItem('mapPins');
+            rebuildMarkersFromStorage();
+        }
+    };
 
         // --- 5. RENDERING ---
-        function renderPin(pinData) {
-            const posKey = `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
-            if (!markerGroups[posKey]) markerGroups[posKey] = [];
+function renderPin(pinData) {
+    const newLatLng = L.latLng(pinData.lat, pinData.lng);
+    let foundGroupKey = null;
 
-            const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
-            if (existingIndex !== -1) markerGroups[posKey][existingIndex] = pinData;
-            else markerGroups[posKey].push(pinData);
-
-            if (markerGroups[posKey].markerInstance) {
-                map.removeLayer(markerGroups[posKey].markerInstance);
-                activeMarkers = activeMarkers.filter(m => m !== markerGroups[posKey].markerInstance);
-            }
-
-            const marker = L.marker([pinData.lat, pinData.lng]);
-            markerGroups[posKey].markerInstance = marker;
-            activeMarkers.push(marker);
-
-            updateFilters();
-            return marker;
+    // 1. Find if a group exists within 15 meters
+    for (const posKey in markerGroups) {
+        const [lat, lng] = posKey.split(',').map(Number);
+        if (newLatLng.distanceTo(L.latLng(lat, lng)) < 15) { 
+            foundGroupKey = posKey;
+            break; 
         }
+    }
 
-        function updateFilters() {
-            const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
-            const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => parseInt(cb.value.split('-')[1]));
+    const posKey = foundGroupKey || `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
+    if (!markerGroups[posKey]) markerGroups[posKey] = [];
 
-            Object.keys(markerGroups).forEach(posKey => {
-                const group = markerGroups[posKey];
-                const marker = group.markerInstance;
-                if (!marker) return;
+    // 2. Add pin to group
+    const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
+    if (existingIndex !== -1) markerGroups[posKey][existingIndex] = pinData;
+    else markerGroups[posKey].push(pinData);
 
-                const visiblePins = [...group].reverse().filter(p => {
-                    const categoryMatch = checkedGroups.includes(categoryConfig[p.category].group);
-                    const statusMatch = checkedStatuses.includes(p.status || 0);
-                    return categoryMatch && statusMatch;
-                });
+    // 3. Ensure a marker instance exists for this group
+    if (!markerGroups[posKey].markerInstance) {
+        const firstPin = markerGroups[posKey][0];
+        markerGroups[posKey].markerInstance = L.marker([firstPin.lat, firstPin.lng]).addTo(map);
+    }
 
-                if (visiblePins.length > 0) {
-                    const topPin = visiblePins[0];
-                    const config = categoryConfig[topPin.category];
-                    const pStatus = STATUS_CONFIG[topPin.status || 0];
-                    const dotCol = pStatus.class === 'red' ? '#ef4444' : pStatus.class === 'yellow' ? '#f59e0b' : '#22c55e';
+    updateFilters(); // Always refresh visibility after adding
+}
 
-                    const newIcon = L.divIcon({
-                        className: 'custom-pin',
-                        html: `<div style="background-color: ${config.color}; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+function updateFilters() {
+    // Get values of checked categories and statuses
+    const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
+    const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => parseInt(cb.value.split('-')[1]));
+
+    Object.keys(markerGroups).forEach(posKey => {
+        const group = markerGroups[posKey];
+        const marker = group.markerInstance;
+        if (!marker) return;
+
+        // Filter pins inside this group based on checkboxes
+        const visiblePins = group.filter(p => {
+            const categoryMatch = checkedGroups.includes(categoryConfig[p.category].group);
+            const statusMatch = checkedStatuses.includes(p.status || 0);
+            return categoryMatch && statusMatch;
+        });
+
+        if (visiblePins.length > 0) {
+            // Show marker and update its icon based on the newest visible pin
+            const topPin = [...visiblePins].reverse()[0]; 
+            const config = categoryConfig[topPin.category];
+            const pStatus = STATUS_CONFIG[topPin.status || 0];
+            const dotCol = pStatus.class === 'red' ? '#ef4444' : pStatus.class === 'yellow' ? '#f59e0b' : '#22c55e';
+
+            const newIcon = L.divIcon({
+                className: 'custom-pin',
+                html: `<div style="background-color: ${config.color}; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
                         <span style="transform: rotate(45deg); font-size: 20px;">${config.icon}</span>
                         <div style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:${dotCol}; border-radius:50%; border:2px solid white; transform:rotate(45deg);"></div>
                         ${visiblePins.length > 1 ? `<div style="position:absolute; top:-5px; right:-5px; background:black; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; transform:rotate(45deg); border:1px solid white;">${visiblePins.length}</div>` : ''}
                        </div>`,
-                        iconSize: [36, 36],
-                        iconAnchor: [18, 36]
-                    });
-
-                    marker.setIcon(newIcon);
-
-                    let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px; font-family: sans-serif;">`;
-                    visiblePins.forEach((p) => {
-                        const pConfig = categoryConfig[p.category];
-                        popupHtml += `
-                        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                            <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
-                            <p style="margin: 5px 0; font-size: 13px;">${p.description || '...'}</p>
-                            <div style="display:flex; gap:5px; margin-bottom:5px;">
-                                ${p.image ? `<button onclick="window.openMedia('${p.image}', 'img')" style="font-size:10px; cursor:pointer;">🖼️ ფოტო</button>` : ''}
-                            </div>
-                            <div style="display:flex; gap:8px;">
-                                <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
-                                <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
-                                <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
-                                ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}', ${p.lat}, ${p.lng})" style="margin-left:auto; color:red;">წაშლა</button>` : ''}
-                            </div>
-                        </div>`;
-                    });
-                    popupHtml += `</div>`;
-                    marker.bindPopup(popupHtml);
-                    map.addLayer(marker);
-                } else {
-                    map.removeLayer(marker);
-                }
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
             });
+
+            marker.setIcon(newIcon);
+            
+            // Build the Popup HTML
+            let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px;">`;
+            [...visiblePins].reverse().forEach((p) => {
+                const pConfig = categoryConfig[p.category];
+                popupHtml += `
+                <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                    <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
+                    <p style="margin: 5px 0; font-size: 13px;">${p.description || 'აღწერა არ არის...'}</p>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
+                        <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
+                        <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
+                        ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}')" style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">წაშლა</button>` : ''}
+                    </div>
+                </div>`;
+            });
+            popupHtml += `</div>`;
+            
+            marker.bindPopup(popupHtml);
+            if (!map.hasLayer(marker)) map.addLayer(marker);
+        } else {
+            // Hide marker if no pins inside match the filter
+            map.removeLayer(marker);
         }
+    });
+}
 
         // --- 6. UI ACTIONS ---
         window.openMedia = (url, type) => {

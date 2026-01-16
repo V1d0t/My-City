@@ -82,6 +82,34 @@ body {
     background: #15803d;
 }
 
+.auth-actions {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.btn-link {
+    background: none;
+    border: 1px solid #16a34a; /* Green border */
+    color: #16a34a;           /* Green text */
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%; /* Makes it match the width of the login button */
+    box-sizing: border-box;
+}
+
+.btn-link:hover {
+    background-color: #f0fdf4; /* Very light green on hover */
+    transform: translateY(-1px);
+}
+
+.btn-link:active {
+    transform: translateY(0);
+}
+
 /* FIXED FOOTER STYLES - Matched to Index.html */
 .main-footer {
     position: fixed;
