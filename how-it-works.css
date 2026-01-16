@@ -334,3 +334,112 @@ body {
         font-size: 0.88rem;
     }
 }
+
+/* --- Appended: Layout centering & responsive improvements (keeps existing code intact) --- */
+
+/* Ensure main content and container center the card */
+.main-content,
+.container-main {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Center the glass card and limit width for readability */
+.glass-card {
+    margin: 20px auto;
+    max-width: 880px;
+    width: min(96%, 880px);
+    box-sizing: border-box;
+}
+
+/* Back link inline and non-disruptive */
+.back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #bbf7d0;
+    text-decoration: none;
+}
+
+/* Center the main heading and adjust spacing */
+.section-title {
+    text-align: center;
+    margin: 8px 0 16px;
+}
+
+/* Constrain and center the scrollable content area */
+.terms-scroll-area {
+    margin: 0 auto;
+    width: min(100%, 760px);
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Center the action button */
+.action-area {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+/* Make the features table responsive and centered */
+.features-table {
+    display: block;
+    width: 100%;
+    max-width: 760px;
+    margin: 12px auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-collapse: collapse;
+}
+
+.features-table thead,
+.features-table tbody {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.features-table th,
+.features-table td {
+    white-space: nowrap;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+/* Accessibility: improve touch targets */
+.btn-primary,
+.back-link {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.05);
+}
+
+/* Medium screens */
+@media (max-width: 900px) {
+    .glass-card { max-width: 720px; }
+    .terms-scroll-area { width: min(100%, 680px); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    body { overflow: auto; } /* allow vertical scrolling for long content */
+    .glass-card {
+        padding: 14px;
+        margin: 14px 10px;
+        width: calc(100% - 20px);
+    }
+    .section-title { font-size: 1.25rem; }
+    .terms-scroll-area { width: calc(100% - 16px); max-height: 52vh; }
+    .features-table th, .features-table td {
+        padding: 8px 10px;
+        font-size: 0.95rem;
+    }
+    .action-area { margin-top: 12px; }
+}
+
+/* Extra-small phones */
+@media (max-width: 420px) {
+    .glass-card { padding: 12px; margin: 10px; }
+    .section-title { font-size: 1.1rem; }
+    .features-table th, .features-table td { padding: 7px 8px; font-size: 0.92rem; }
+}

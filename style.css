@@ -6,11 +6,12 @@
 }
 
 body {
-    height: 100vh;
+    background-color: #0b1220; /* fallback while image loads or if missing */
     background-image: url("IMG/HPBGmap.PNG");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    height: 100vh;
 }
 
 
