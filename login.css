@@ -357,3 +357,27 @@ body {
         font-size: 0.85rem;
     }
 }
+
+
+/* --- New Reset Form Styles --- */
+#reset-form {
+    display: none; /* Keep hidden until JS triggers it */
+}
+
+.btn-back-text {
+    background: none;
+    border: none;
+    color: #bbf7d0;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 14px;
+    text-decoration: underline;
+    transition: opacity 0.2s;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-back-text:hover {
+    opacity: 0.8;
+}

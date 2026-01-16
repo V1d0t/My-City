@@ -10,21 +10,28 @@
 
 <div class="overlay">
     <div class="home-container">
-        <h1 class="title">შესვლა</h1>
+        <h1 class="title" id="auth-title">შესვლა</h1>
 
-        <form class="form">
+        <form class="form" id="login-form">
             <input type="email" id="email" placeholder="ელ. ფოსტა" required maxlength="50">
-            <input type="password" placeholder="პაროლი" required minlength="8" maxlength="30">
+            <input type="password" id="password" placeholder="პაროლი" required minlength="8" maxlength="30">
             <button type="submit" class="btn register">შესვლა</button>
         </form>
 
-        <p class="subtitle">
+        <form class="form" id="reset-form">
+            <p style="color: #fff; font-size: 14px; margin-bottom: 15px; text-align: center;">შეიყვანეთ ელ-ფოსტა პაროლის აღსადგენად</p>
+            <input type="email" id="reset-email" placeholder="ელ. ფოსტა" required maxlength="50">
+            <button type="submit" class="btn register">ბმულის გაგზავნა</button>
+            <button type="button" id="back-to-login" class="btn-back-text">უკან დაბრუნება</button>
+        </form>
+
+        <p class="subtitle" id="main-subtitle">
             დაბრუნება <a href="index.html" style="color:#bbf7d0;">მთავარ გვერდზე</a>
         </p>
-<div class="auth-actions">
-    <button type="button" id="forgot-password-btn" class="btn-link">დაგავიწყდათ პაროლი?</button>
-</div>
 
+        <div class="auth-actions" id="forgot-password-area">
+            <button type="button" id="forgot-password-btn" class="btn-link">დაგავიწყდათ პაროლი?</button>
+        </div>
     </div>
 </div>
 
@@ -34,36 +41,21 @@
             <h3 class="footer-logo">ჩემი ქალაქი</h3>
             <p>ერთად ვიზრუნოთ ჩვენს ქალაქზე. დაამყარე წესრიგი, სისუფთავე და უსაფრთხოება შენი ჩართულობით.</p>
         </div>
-
-            <div class="footer-section">
-                <h4>წარმმართველი პრინციპები</h4>
-                <div class="footer-links-container">
-                    <a href="terms.html" class="footer-link">
-                        წესები და პირობები
-                        <svg class="footer-link-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M384 224v184a40 40 0 0 1-40 40H104a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40h160M336 64h112v112M224 288L448 64"/></svg>
-                    </a>
-                    <a href="privacy.html" class="footer-link">
-                        კონფიდენციალურობა
-                        <svg class="footer-link-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M384 224v184a40 40 0 0 1-40 40H104a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40h160M336 64h112v112M224 288L448 64"/></svg>
-                    </a>
-                    <a href="how-it-works.html" class="footer-link">
-                        როგორ მუშაობს?
-                        <svg class="footer-link-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M384 224v184a40 40 0 0 1-40 40H104a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40h160M336 64h112v112M224 288L448 64"/></svg>
-                    </a>
-                    <a href="contact.html" class="footer-link">
-                        კონტაქტი
-                        <svg class="footer-link-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M384 224v184a40 40 0 0 1-40 40H104a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40h160M336 64h112v112M224 288L448 64"/></svg>
-                    </a>
-                </div>
+        <div class="footer-section">
+            <h4>წარმმართველი პრინციპები</h4>
+            <div class="footer-links-container">
+                <a href="terms.html" class="footer-link">წესები და პირობები</a>
+                <a href="privacy.html" class="footer-link">კონფიდენციალურობა</a>
+                <a href="how-it-works.html" class="footer-link">როგორ მუშაობს?</a>
+                <a href="contact.html" class="footer-link">კონტაქტი</a>
             </div>
-
+        </div>
         <div class="footer-section">
             <h4>კონტაქტი</h4>
             <p>📞 +995 XXX XX XX XX</p>
             <p>📧 support@mycity.ge</p>
             <p>📍 ქუთაისი, საქართველო</p>
         </div>
-
         <div class="footer-section">
             <h4>გამოგვყევით</h4>
             <div class="social-icons">
@@ -78,10 +70,9 @@
 </footer>
 
 <script type="module">
-    // 1. Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    // 2. Your Config (Matches your project)
+
     const firebaseConfig = {
         apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
         authDomain: "mycityapp-b26e4.firebaseapp.com",
@@ -94,58 +85,62 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // 3. Handle Login
-    const loginForm = document.querySelector('.form'); // Finds your existing form class
-    
-    // Assign IDs to your inputs in the HTML or we can grab them like this:
-    const emailInput = loginForm.querySelector('input[type="email"]');
-    const passInput = loginForm.querySelector('input[type="password"]');
+    // Get Elements
+    const loginForm = document.getElementById('login-form');
+    const resetForm = document.getElementById('reset-form');
+    const authTitle = document.getElementById('auth-title');
+    const forgotArea = document.getElementById('forgot-password-area');
+    const mainSubtitle = document.getElementById('main-subtitle');
 
+    // 1. Handle Login
     loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Stop page from refreshing
-
-        const email = emailInput.value;
-        const password = passInput.value;
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // SUCCESS! Redirect to your map page
-            // Change 'map.html' to whatever your map file is named (e.g., index.html)
             window.location.href = "map.html"; 
         } catch (error) {
-            console.error(error);
-            // Translate common Firebase errors for your users
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                alert("მონაცემები არასწორია. გთხოვთ სცადოთ თავიდან.");
-            } else if (error.code === 'auth/invalid-credential') {
-                 alert("მონაცემები არასწორია.");
-            } else {
-                alert("დაფიქსირდა შეცდომა: " + error.message);
-            }
+            alert("ავტორიზაციის შეცდომა: მონაცემები არასწორია.");
         }
     });
 
-// 4. Handle Password Reset
-    document.getElementById('forgot-password-btn').onclick = (e) => {
-        e.preventDefault(); 
+// 2. Switch to Reset Mode
+    document.getElementById('forgot-password-btn').onclick = () => {
+        loginForm.style.display = 'none';
+        forgotArea.style.display = 'none';
+        mainSubtitle.style.display = 'none';
         
-        // This looks for the id="email" we just added above
-        const emailField = document.getElementById('email').value;
+        // Use 'block' to keep the vertical stacking from your CSS
+        resetForm.style.display = 'block'; 
+        authTitle.innerText = "პაროლის აღდგენა";
+    };
 
-        if (!emailField) {
-            alert("გთხოვთ, ჯერ შეიყვანოთ ელ-ფოსტა.");
-            return;
+    // 3. Switch back to Login Mode
+    document.getElementById('back-to-login').onclick = () => {
+        resetForm.style.display = 'none';
+        
+        // Use 'block' here too so it returns to normal
+        loginForm.style.display = 'block'; 
+        forgotArea.style.display = 'block';
+        mainSubtitle.style.display = 'block';
+        authTitle.innerText = "შესვლა";
+    };
+
+    // 4. Handle Reset Email Action
+    resetForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const emailValue = document.getElementById('reset-email').value;
+
+        try {
+            await sendPasswordResetEmail(auth, emailValue);
+            alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტა ან Spam ფოლდერი.");
+            document.getElementById('back-to-login').click(); // Go back to login screen
+        } catch (error) {
+            alert("შეცდომა: " + error.message);
         }
-
-        sendPasswordResetEmail(auth, emailField)
-            .then(() => {
-                alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტის Spam ფოლდერი, თუ არ ჩანს.");
-            })
-            .catch((error) => {
-                alert("შეცდომა: " + error.message);
-            });
-    }; 
-    
+    };
 </script>
 
 </body>
