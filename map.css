@@ -33,7 +33,7 @@ html, body {
     top: 45px;
     left: 0;
     background: white;
-    width: 220px; /* Slightly wider for better text fit */
+    width: 220px;
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     border: 1px solid #eee;
@@ -121,20 +121,32 @@ html, body {
 
 #search:focus { border-color: #16a34a; }
 
-.add-pin-btn {
+/* FIX: Grouping container for Desktop */
+.top-right-actions {
     position: absolute;
     top: 20px;
-    left: calc(50% + 180px);
+    right: 20px;
     z-index: 1001;
-    background-color: #16a34a;
-    color: #fff;
+    display: flex;
+    gap: 10px;
+}
+
+/* FIX: Standardized button behavior */
+.add-pin-btn, .btn-logout {
+    position: static; /* Let the container handle placement */
     padding: 11px 18px;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: 0.2s ease;
+    white-space: nowrap;
+}
+
+.add-pin-btn {
+    background-color: #16a34a;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .add-pin-btn:hover {
@@ -142,7 +154,18 @@ html, body {
     transform: translateY(-1px);
 }
 
-/* 3. Map Crosshair - Improved Visibility */
+.btn-logout {
+    background-color: #10b981;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-logout:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+/* 3. Map Crosshair */
 .crosshair {
     position: absolute;
     top: 50%;
@@ -170,16 +193,13 @@ html, body {
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s ease;
-    
-    /* ADD THIS LINE */
     pointer-events: none; 
 }
 
-/* AND ADD THIS LINE HERE */
 .modal-overlay.active {
     visibility: visible;
     opacity: 1;
-    pointer-events: auto; /* This turns clicks back ON when the modal is open */
+    pointer-events: auto;
 }
 
 .pin-modal {
@@ -200,7 +220,7 @@ html, body {
     .modal-overlay.active .pin-modal { transform: scale(1); }
 }
 
-/* 5. Status Visibility Logic */
+/* 5. Status Logic */
 .status-item {
     display: flex;
     align-items: center;
@@ -209,251 +229,96 @@ html, body {
     cursor: pointer;
 }
 
-.status-label-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.label-main {
-    font-size: 13px;
-    font-weight: bold;
-}
-
-/* Color matched labels for visibility */
+.status-label-group { display: flex; flex-direction: column; }
+.label-main { font-size: 13px; font-weight: bold; }
 .status-item .dot.red ~ .status-label-group .label-main { color: #b91c1c; }
 .status-item .dot.yellow ~ .status-label-group .label-main { color: #b45309; }
 .status-item .dot.green ~ .status-label-group .label-main { color: #15803d; }
-
-.label-sub {
-    font-size: 10px;
-    color: #64748b;
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
+.label-sub { font-size: 10px; color: #64748b; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .dot.red { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
 .dot.yellow { background: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
 .dot.green { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.4); }
-
 .status-item input:not(:checked) ~ .status-label-group { opacity: 0.3; }
 
-
-/* Styling the category group headers in the dropdown */
-optgroup {
-    background-color: #f3f4f6; /* Light gray background */
-    color: #4b5563;           /* Darker gray text */
-    font-style: normal;       /* Removes the default italic look */
-    font-weight: bold;
-    padding: 5px;
-}
-
-/* Resetting the options back to white so they don't stay gray */
-optgroup option {
-    background-color: #ffffff; 
-    color: #333333;
-    font-weight: normal;
-    padding: 8px;
-}
-
-
-/* 6. Form Elements */
+/* Form Elements */
+optgroup { background-color: #f3f4f6; color: #4b5563; font-weight: bold; padding: 5px; }
+optgroup option { background-color: #ffffff; color: #333; font-weight: normal; padding: 8px; }
 .form-group { margin-bottom: 18px; }
 label { display: block; font-weight: 600; margin-bottom: 8px; color: #4b5563; font-size: 0.9rem; }
-
-select, textarea {
-    width: 100%; 
-    padding: 12px; 
-    border: 1px solid #d1d5db; 
-    border-radius: 10px; 
-    font-size: 1rem;
-    box-sizing: border-box;
-}
-
+select, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
 .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 .btn-primary { background: #16a34a; color: white; flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
 .btn-secondary { background: #f3f4f6; color: #4b5563; flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-
 .hidden { display: none; }
 
+/* 6. RESPONSIVE MODULES */
 
-
-/* Logout Button Styling */
-.logout-container {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000; /* Ensures it stays above the Leaflet map */
-}
-
-.btn-logout {
-    background-color: #10b981; /* Matches your green theme */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.2s ease;
-}
-
-.btn-logout:hover {
-    background-color: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.btn-logout:active {
-    transform: translateY(0);
-}
-
-/* Responsive enhancements — append only once (keeps existing code intact) */
-
-/* General fluid adjustments */
-.filter-trigger,
-.back-home,
-.add-pin-btn,
-.logout-container,
-#search {
-    transition: all 0.18s ease;
-}
-
-/* Medium screens */
 @media (max-width: 900px) {
     .filter-trigger { top: 64px; left: 8px; font-size: 12px; padding: 6px 12px; }
-    .filter-menu { top: 42px; left: 6px; width: 200px; }
-    .back-home { top: 12px; left: 12px; padding: 8px 12px; font-size: 13px; }
     #search { width: 300px; top: 16px; }
-    .add-pin-btn { top: 12px; left: calc(50% + 160px); padding: 10px 14px; }
-    .logout-container { top: 12px; right: 12px; }
-    .crosshair { width: 26px; height: 26px; margin-left: -13px; margin-top: -13px; }
-    .pin-modal { max-width: 460px; padding: 20px; border-radius: 18px; }
+    .pin-modal { max-width: 460px; padding: 20px; }
 }
 
-/* Mobile - phones and small tablets */
 @media (max-width: 600px) {
-    /* Allow modest page flow on very small devices while keeping full-screen map feel */
-    html, body { overflow: hidden; } /* keep map fullscreen; modals and menus will handle scrolling */
+    /* Top Bar Setup */
+    .map-controls-top {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+    }
 
-    /* Top controls stack & scale */
     .back-home {
-        top: 12px;
-        left: 10px;
-        padding: 8px 10px;
-        font-size: 14px;
-        border-radius: 8px;
+        position: static;
+        min-width: 45px;
+        padding: 10px 5px;
+        text-align: center;
+        pointer-events: auto;
     }
 
-    /* Center search becomes fluid and narrower to fit on small screens */
     #search {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        top: 54px;
-        width: calc(100% - 120px); /* leave room for add-pin/logout buttons */
-        max-width: none;
-        padding: 10px 12px;
-        font-size: 14px;
+        position: static;
+        transform: none;
+        flex: 1;
+        width: auto;
+        margin: 0;
+        pointer-events: auto;
     }
 
-    /* Place add-pin and logout on the right, stacked for easy tap targets */
-    .add-pin-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        left: auto;
-        padding: 10px 12px;
-        border-radius: 10px;
-        font-size: 14px;
+    /* FIX: Stack Buttons at Bottom Right for Mobile */
+    .top-right-actions {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        right: 10px;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: auto;
     }
 
-    .logout-container {
-        position: absolute;
-        top: 56px;
-        right: 12px;
-        z-index: 1000;
-    }
-
-    .btn-logout {
-        padding: 8px 12px;
-        border-radius: 8px;
+    .add-pin-btn, .btn-logout {
+        width: 110px;
+        padding: 12px 5px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         font-size: 13px;
     }
 
-    /* Filter trigger and menu adapt to mobile: compact trigger and full-width dropdown */
-    .filter-trigger {
-        top: 100px;
-        left: 10px;
-        padding: 7px 10px;
-        font-size: 13px;
-        border-radius: 8px;
-    }
-
-    .filter-menu {
-        position: absolute;
-        top: 140px;
-        left: 10px;
-        width: calc(100% - 20px);
-        max-width: none;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.28);
-    }
-
-    .filter-items label { padding: 10px 8px; font-size: 14px; }
-
-    /* Crosshair slightly smaller for cramped screens */
-    .crosshair {
-        width: 22px;
-        height: 22px;
-        margin-left: -11px;
-        margin-top: -11px;
-    }
-
-    /* Modal becomes bottom sheet by default (already handled) — ensure full-width on phones */
-    .pin-modal {
-        width: 100%;
-        max-width: 100%;
-        padding: 18px;
-        border-radius: 20px 20px 0 0;
-    }
-
-    .modal-overlay { align-items: flex-end; }
-
-    /* Improve tap targets and readable text in modal */
-    .form-group { margin-bottom: 14px; }
-    label { font-size: 0.95rem; }
-    select, textarea, .modal-actions .btn-primary, .modal-actions .btn-secondary {
-        font-size: 14px;
-        padding: 12px;
-    }
-
-    /* Small visual tweaks for status list readability */
-    .status-item { gap: 8px; margin-bottom: 10px; }
-    .label-main { font-size: 13px; }
-    .label-sub { font-size: 11px; }
-
-    /* Ensure the map fill remains usable behind UI */
-    #map { height: 100vh; }
-
-    /* Hide non-critical shadows on small devices for performance */
-    .filter-menu, .add-pin-btn, .back-home { box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    /* UI Placement adjustments */
+    .filter-dropdown-wrapper { top: auto; bottom: 80px; left: 10px; }
+    #locate-btn { bottom: 20px !important; left: 10px !important; right: auto !important; }
+    .filter-menu { position: fixed; bottom: 130px; left: 10px; width: calc(100% - 20px); }
+    
+    .pin-modal { padding: 18px; border-radius: 20px 20px 0 0; }
 }
 
-/* Extra-small phones */
 @media (max-width: 420px) {
-    #search { top: 62px; width: calc(100% - 112px); font-size: 13px; padding: 9px 10px; }
-    .filter-trigger { top: 118px; left: 8px; padding: 6px 8px; font-size: 12px; }
-    .filter-menu { top: 160px; left: 8px; width: calc(100% - 16px); padding: 8px; }
-    .add-pin-btn { top: 12px; right: 8px; padding: 9px 10px; font-size: 13px; }
-    .logout-container { top: 54px; right: 8px; }
-    .crosshair { width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; filter: drop-shadow(0 0 0.6px rgba(255,255,255,0.9)); }
-    .pin-modal { padding: 14px; border-radius: 16px 16px 0 0; }
-    .modal-actions { flex-direction: column; gap: 10px; }
-    .modal-actions .btn-primary, .modal-actions .btn-secondary { width: 100%; padding: 12px; }
+    .top-right-actions { bottom: 15px; right: 8px; }
+    .add-pin-btn, .btn-logout { width: 100px; font-size: 12px; }
+    .modal-actions { flex-direction: column; }
 }
