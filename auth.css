@@ -1,0 +1,106 @@
+/* ===== Reset Password Page ===== */
+
+.auth-body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f766e, #064e3b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #0b1220; /* fallback while image loads or if missing */
+    background-image: url("IMG/HPBGmap.PNG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+}
+
+.back-home {
+    width: 100%;
+    text-align: center;
+    margin: 20px 0 0 0;
+}
+
+.back-home a {
+    text-decoration: none;
+    color: #0f766e;
+    font-weight: 1000;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+    opacity: 0.9;
+
+}
+
+.back-home a:hover {
+    color: #0f766e; /* teal/green accent */
+}
+
+
+.auth-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    padding: 32px;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    text-align: center;
+}
+
+.auth-card h2 {
+    margin-bottom: 8px;
+    color: #064e3b;
+    font-size: 1.6rem;
+}
+
+.auth-subtitle {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 24px;
+}
+
+.auth-card input {
+    width: 90%;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 1rem;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+.auth-card input:focus {
+    outline: none;
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.2);
+}
+
+.auth-card button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #16a34a, #0f766e);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.auth-card button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.auth-message {
+    margin-top: 16px;
+    font-size: 0.9rem;
+}
+
+.auth-message.success {
+    color: #16a34a;
+}
+
+.auth-message.error {
+    color: #dc2626;
+}

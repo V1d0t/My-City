@@ -128,29 +128,39 @@
         authTitle.innerText = "შესვლა";
     };
 
-    // 4. Handle Reset Email Action
+// 4. Handle Reset Email Action
+import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const actionCodeSettings = {
+    url: "https://V1d0t.github.io/My-City/reset-password.html",
+    handleCodeInApp: true
+};
+
+
 resetForm.onsubmit = async (e) => {
     e.preventDefault();
     const emailValue = document.getElementById('reset-email').value;
     const submitBtn = resetForm.querySelector('button[type="submit"]');
 
-    // 1. Disable button so they don't click 100 times while it's slow
+    // Disable button while sending
     submitBtn.disabled = true;
     submitBtn.innerText = "იგზავნება...";
 
     try {
-        await sendPasswordResetEmail(auth, emailValue);
+        await sendPasswordResetEmail(auth, emailValue, actionCodeSettings);
         alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტა ან Spam საქაღალდე.");
         document.getElementById('back-to-login').click(); 
     } catch (error) {
         console.error(error);
         if (error.code === 'auth/network-request-failed') {
             alert("კავშირის შეცდომა: შეამოწმეთ ინტერნეტი და სცადეთ თავიდან.");
+        } else if (error.code === 'auth/user-not-found') {
+            alert("მომხმარებელი ამ ელ-ფოსტით არ მოიძებნა.");
         } else {
             alert("შეცდომა: " + error.message);
         }
     } finally {
-        // 2. Re-enable button if it fails
+        // Re-enable button
         submitBtn.disabled = false;
         submitBtn.innerText = "ბმულის გაგზავნა";
     }

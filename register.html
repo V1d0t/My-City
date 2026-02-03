@@ -77,49 +77,49 @@
 </footer>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
-        authDomain: "mycityapp-b26e4.firebaseapp.com",
-        projectId: "mycityapp-b26e4",
-        storageBucket: "mycityapp-b26e4.firebasestorage.app",
-        messagingSenderId: "318927416494",
-        appId: "1:318927416494:web:85d98e04ccd02899cf913f"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
+    authDomain: "mycityapp-b26e4.firebaseapp.com",
+    projectId: "mycityapp-b26e4",
+    storageBucket: "mycityapp-b26e4.firebasestorage.app",
+    messagingSenderId: "318927416494",
+    appId: "1:318927416494:web:85d98e04ccd02899cf913f"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    const registerForm = document.querySelector('.form');
-    
-    // Selecting inputs by their types
-    const emailInput = registerForm.querySelector('input[type="email"]');
-    const passInput = registerForm.querySelector('input[type="password"]');
+const registerForm = document.querySelector('.form');
 
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+// Selecting inputs by their types
+const emailInput = registerForm.querySelector('input[type="email"]');
+const passInput = registerForm.querySelector('input[type="password"]');
 
-        const email = emailInput.value;
-        const password = passInput.value;
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert("რეგისტრაცია წარმატებით დასრულდა!");
-            // Redirect to the map (make sure the filename is correct)
-            window.location.href = "map.html"; 
-        } catch (error) {
-            console.error(error);
-            if (error.code === 'auth/email-already-in-use') {
-                alert("ეს ელ.ფოსტა უკვე გამოყენებულია.");
-            } else if (error.code === 'auth/weak-password') {
-                alert("პაროლი უნდა შედგებოდეს მინიმუმ 6 სიმბოლოსგან.");
-            } else {
-                alert("შეცდომა რეგისტრაციისას: " + error.message);
-            }
+    const email = emailInput.value;
+    const password = passInput.value;
+
+    try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("რეგისტრაცია წარმატებით დასრულდა!");
+        // Redirect to the map (make sure the filename is correct)
+        window.location.href = "map.html"; 
+    } catch (error) {
+        console.error(error);
+        if (error.code === 'auth/email-already-in-use') {
+            alert("ეს ელ.ფოსტა უკვე გამოყენებულია.");
+        } else if (error.code === 'auth/weak-password') {
+            alert("პაროლი უნდა შედგებოდეს მინიმუმ 6 სიმბოლოსგან.");
+        } else {
+            alert("შეცდომა რეგისტრაციისას: " + error.message);
         }
-    });
+    }
+});
 </script>
 
 </body>
