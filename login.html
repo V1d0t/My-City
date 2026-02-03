@@ -125,12 +125,6 @@ document.getElementById('back-to-login').onclick = () => {
     authTitle.innerText = "შესვლა";
 };
 
-// 4. Handle Reset Email
-const actionCodeSettings = {
-    // Use all lowercase for the domain part
-    url: "https://v1d0t.github.io/My-City/reset-password.html",
-    handleCodeInApp: false // Set this to false for GitHub Pages
-};
 
 resetForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -159,4 +153,3 @@ resetForm.addEventListener('submit', async (e) => {
 </body>
 
 </html>
-
