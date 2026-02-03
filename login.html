@@ -141,17 +141,14 @@ resetForm.addEventListener('submit', async (e) => {
     submitBtn.innerText = "იგზავნება...";
 
     try {
-        // Pass the actionCodeSettings here so Firebase knows where to send them
-        await sendPasswordResetEmail(auth, emailValue, actionCodeSettings);
-        alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტა ან Spam საქაღალდე.");
+        // No need for actionCodeSettings anymore, 
+        // Firebase will use the Action URL you just saved in the console!
+        await sendPasswordResetEmail(auth, emailValue); 
+        alert("ბმული გამოგზავნილია ! შეამოწმეთ ელ-ფოსტა ან Spam საქაღალდე.");
         document.getElementById('back-to-login').click(); 
     } catch (error) {
-        console.error(error);
-        if (error.code === 'auth/unauthorized-domain') {
-            alert("შეცდომა: დომენი დაბლოკილია. დაამატეთ V1d0t.github.io Firebase  F12Console-ში.");
-        } else {
-            alert("შეცდომა: " + error.message);
-        }
+        console.error("Error Code:", error.code);
+        alert("შეცდომა: " + error.message);
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "ბმულის გაგზავნა";
@@ -162,3 +159,4 @@ resetForm.addEventListener('submit', async (e) => {
 </body>
 
 </html>
+
