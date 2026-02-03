@@ -70,79 +70,71 @@
 </footer>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } 
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
-        authDomain: "mycityapp-b26e4.firebaseapp.com",
-        projectId: "mycityapp-b26e4",
-        storageBucket: "mycityapp-b26e4.firebasestorage.app",
-        messagingSenderId: "318927416494",
-        appId: "1:318927416494:web:85d98e04ccd02899cf913f"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
+    authDomain: "mycityapp-b26e4.firebaseapp.com",
+    projectId: "mycityapp-b26e4",
+    storageBucket: "mycityapp-b26e4.firebasestorage.app",
+    messagingSenderId: "318927416494",
+    appId: "1:318927416494:web:85d98e04ccd02899cf913f"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    // Get Elements
-    const loginForm = document.getElementById('login-form');
-    const resetForm = document.getElementById('reset-form');
-    const authTitle = document.getElementById('auth-title');
-    const forgotArea = document.getElementById('forgot-password-area');
-    const mainSubtitle = document.getElementById('main-subtitle');
+// Elements
+const loginForm = document.getElementById('login-form');
+const resetForm = document.getElementById('reset-form');
+const authTitle = document.getElementById('auth-title');
+const forgotArea = document.getElementById('forgot-password-area');
+const mainSubtitle = document.getElementById('main-subtitle');
 
-    // 1. Handle Login
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+// 1. Login handler
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "map.html";
+    } catch (error) {
+        alert("ავტორიზაციის შეცდომა: მონაცემები არასწორია.");
+    }
+});
 
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            window.location.href = "map.html"; 
-        } catch (error) {
-            alert("ავტორიზაციის შეცდომა: მონაცემები არასწორია.");
-        }
-    });
+// 2. Show Reset Form
+document.getElementById('forgot-password-btn').onclick = () => {
+    loginForm.style.display = 'none';
+    resetForm.style.display = 'block';
+    forgotArea.style.display = 'none';
+    mainSubtitle.style.display = 'none';
+    authTitle.innerText = "პაროლის აღდგენა";
+};
 
-// 2. Switch to Reset Mode
-    document.getElementById('forgot-password-btn').onclick = () => {
-        loginForm.style.display = 'none';
-        forgotArea.style.display = 'none';
-        mainSubtitle.style.display = 'none';
-        
-        // Use 'block' to keep the vertical stacking from your CSS
-        resetForm.style.display = 'block'; 
-        authTitle.innerText = "პაროლის აღდგენა";
-    };
+// 3. Back to Login
+document.getElementById('back-to-login').onclick = () => {
+    resetForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    forgotArea.style.display = 'block';
+    mainSubtitle.style.display = 'block';
+    authTitle.innerText = "შესვლა";
+};
 
-    // 3. Switch back to Login Mode
-    document.getElementById('back-to-login').onclick = () => {
-        resetForm.style.display = 'none';
-        
-        // Use 'block' here too so it returns to normal
-        loginForm.style.display = 'block'; 
-        forgotArea.style.display = 'block';
-        mainSubtitle.style.display = 'block';
-        authTitle.innerText = "შესვლა";
-    };
-
-// 4. Handle Reset Email Action
-import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+// 4. Handle Reset Email Test V2
 const actionCodeSettings = {
     url: "https://V1d0t.github.io/My-City/reset-password.html",
     handleCodeInApp: true
 };
 
-
-resetForm.onsubmit = async (e) => {
+resetForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const emailValue = document.getElementById('reset-email').value;
     const submitBtn = resetForm.querySelector('button[type="submit"]');
 
-    // Disable button while sending
     submitBtn.disabled = true;
     submitBtn.innerText = "იგზავნება...";
 
@@ -160,11 +152,10 @@ resetForm.onsubmit = async (e) => {
             alert("შეცდომა: " + error.message);
         }
     } finally {
-        // Re-enable button
         submitBtn.disabled = false;
         submitBtn.innerText = "ბმულის გაგზავნა";
     }
-};
+});
 </script>
 
 </body>
