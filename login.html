@@ -127,9 +127,9 @@ document.getElementById('back-to-login').onclick = () => {
 
 // 4. Handle Reset Email
 const actionCodeSettings = {
-    // This MUST match the URL you whitelisted in the Firebase Console
-    url: "https://V1d0t.github.io/My-City/reset-password.html",
-    handleCodeInApp: true
+    // Use all lowercase for the domain part
+    url: "https://v1d0t.github.io/My-City/reset-password.html",
+    handleCodeInApp: false // Set this to false for GitHub Pages
 };
 
 resetForm.addEventListener('submit', async (e) => {
@@ -160,4 +160,5 @@ resetForm.addEventListener('submit', async (e) => {
 </script>
 
 </body>
+
 </html>
