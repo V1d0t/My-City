@@ -78,6 +78,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyAXNVOlyzRhpVh7lJ6LC39ngr_D_98_Gak",
     authDomain: "mycityapp-b26e4.firebaseapp.com",
     projectId: "mycityapp-b26e4",
+    // storageBucket and appId are optional here but good to keep consistent
     storageBucket: "mycityapp-b26e4.firebasestorage.app",
     messagingSenderId: "318927416494",
     appId: "1:318927416494:web:85d98e04ccd02899cf913f"
@@ -124,9 +125,10 @@ document.getElementById('back-to-login').onclick = () => {
     authTitle.innerText = "შესვლა";
 };
 
-// 4. Handle Reset Email Test V2
+// 4. Handle Reset Email
 const actionCodeSettings = {
-    url: "https://v1d0t.github.io/My-City/reset-password.html"
+    // This MUST match the URL you whitelisted in the Firebase Console
+    url: "https://V1d0t.github.io/My-City/reset-password.html",
     handleCodeInApp: true
 };
 
@@ -139,15 +141,14 @@ resetForm.addEventListener('submit', async (e) => {
     submitBtn.innerText = "იგზავნება...";
 
     try {
+        // Pass the actionCodeSettings here so Firebase knows where to send them
         await sendPasswordResetEmail(auth, emailValue, actionCodeSettings);
         alert("ბმული გამოგზავნილია! შეამოწმეთ ელ-ფოსტა ან Spam საქაღალდე.");
         document.getElementById('back-to-login').click(); 
     } catch (error) {
         console.error(error);
-        if (error.code === 'auth/network-request-failed') {
-            alert("კავშირის შეცდომა: შეამოწმეთ ინტერნეტი და სცადეთ თავიდან.");
-        } else if (error.code === 'auth/user-not-found') {
-            alert("მომხმარებელი ამ ელ-ფოსტით არ მოიძებნა.");
+        if (error.code === 'auth/unauthorized-domain') {
+            alert("შეცდომა: დომენი დაბლოკილია. დაამატეთ V1d0t.github.io Firebase  F12Console-ში.");
         } else {
             alert("შეცდომა: " + error.message);
         }
@@ -159,6 +160,4 @@ resetForm.addEventListener('submit', async (e) => {
 </script>
 
 </body>
-
 </html>
-
