@@ -322,3 +322,100 @@ select, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border
     .add-pin-btn, .btn-logout { width: 100px; font-size: 12px; }
     .modal-actions { flex-direction: column; }
 }
+
+
+/* Guest Modal */
+.guest-modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.guest-modal-content {
+    background: white;
+    color: #111;
+    padding: 25px 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    text-align: center;
+    font-family: sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    animation: slideDown 0.4s ease-out;
+}
+
+.guest-modal-content h2 {
+    margin-top: 0;
+    color: #1f2937;
+}
+
+.guest-modal-content p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.guest-modal-content button {
+    margin-top: 15px;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: #10b981;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+
+/* Guest Pin Cooldown Modal */
+
+#guest-cooldown-modal {
+    display: none;
+    position: fixed;
+    top:0; left:0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+#guest-cooldown-modal .guest-modal-content {
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 300px;
+    font-family: sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+#guest-cooldown-modal h2 {
+    margin-bottom: 10px;
+    color: #b91c1c; /* red */
+}
+
+#guest-cooldown-modal p {
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+#guest-cooldown-close {
+    padding: 8px 15px;
+    background: #ef4444;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}

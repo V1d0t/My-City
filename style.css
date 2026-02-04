@@ -90,6 +90,22 @@ body {
     background: #15803d;
 }
 
+.guest-btn {
+  background: linear-gradient(135deg, #0f766e, #064e3b);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.guest-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+
 .main-footer {
     position: fixed;
     bottom: 0;

@@ -26,6 +26,30 @@
         </div>
     </div>
 
+    <!-- Guest Info Modal -->
+<div id="guest-modal" class="guest-modal">
+    <div class="guest-modal-content">
+        <h2>სტუმრის რეჟიმი</h2>
+        <p>
+            ეს არის <strong>ერთჯერადი სტუმრის რეჟიმი</strong>.<br>
+            შეგიძლიათ დაამატოთ ერთი პინი რეგისტრაციის გარეშე.<br>
+            პინის შეცვლა შესაძლებელია მხოლოდ ერთი საათის შემდეგ.
+        </p>
+        <button id="guest-modal-close">გასაგებია</button>
+    </div>
+</div>
+
+<!-- Guest Pin Cooldown Modal -->
+<div id="guest-cooldown-modal" class="guest-modal">
+  <div class="guest-modal-content">
+    <h2>პინი დაბლოკილია</h2>
+    <p id="guest-cooldown-text"></p>
+    <button id="guest-cooldown-close">გასაგებია</button>
+  </div>
+</div>
+
+
+
     <div class="crosshair"></div>
 
     <button id="locate-btn" title="ჩემი ადგილმდებარეობა"
@@ -183,14 +207,26 @@
         const auth = getAuth(app);
 
         // Security Check
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = "login.html";
-            } else {
-                console.log("Logged in as:", user.email);
-                setTimeout(() => { map.invalidateSize(); }, 400);
-            }
-        });
+const urlParams = new URLSearchParams(window.location.search);
+const isGuest = urlParams.get("guest") === "true";
+
+onAuthStateChanged(auth, (user) => {
+    if (!user && !isGuest) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    if (isGuest) {
+        console.log("Guest mode active");
+    } else {
+        console.log("Logged in as:", user.email);
+    }
+
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 400);
+});
+
 
         // Global Logout
         window.logoutUser = () => {
@@ -201,10 +237,32 @@
             }
         };
 
+// ----------- Guest Info ------------------
+(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGuest = urlParams.get('guest') === 'true';
+    window.isGuest = isGuest; // global flag if needed later
+
+    if (isGuest) {
+        const modal = document.getElementById('guest-modal');
+        const closeBtn = document.getElementById('guest-modal-close');
+        modal.style.display = 'flex';
+
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+})();
+
+
+
         // --- 2. CONFIGURATION ---
         const GEORGIA_BOUNDS = [[41.056, 40.999], [43.760, 46.920]];
         const KUTAISI_CENTER = [42.2667, 42.7167];
         const EXPIRATION_TIME = 90 * 60 * 1000;
+        // Guest pin cooldown (1 hour)
+        const GUEST_COOLDOWN = 60 * 60 * 1000; // 1 hour in ms
+
 
         const STATUS_CONFIG = {
             0: { label: "დაფიქსირებულია", class: "red" },
@@ -289,12 +347,24 @@ function rebuildMarkersFromStorage() {
 }
 
     // replace removePinFromStorage: no full reload 
-    window.removePinFromStorage = (id) => {
-        let pins = getSavedPins();
-        pins = pins.filter(p => p.id !== id);
-        localStorage.setItem('mapPins', JSON.stringify(pins));
-        rebuildMarkersFromStorage();
-    };
+window.removePinFromStorage = (id) => {
+    let pins = getSavedPins();
+    const removedPin = pins.find(p => p.id === id);
+
+    // Remove the pin from storage
+    pins = pins.filter(p => p.id !== id);
+    localStorage.setItem('mapPins', JSON.stringify(pins));
+
+    // Check if the removed pin is the guest pin
+    const guestPinData = JSON.parse(localStorage.getItem('guestPin'));
+    if (guestPinData && guestPinData.id === id) {
+        localStorage.removeItem('guestPin'); // clear guest cooldown
+        window.isGuestPinPlaced = false; // optional flag
+    }
+
+    rebuildMarkersFromStorage();
+};
+
 
     // replace changePinStatus: update storage and refresh markers without reload
     window.changePinStatus = (id, newStatus) => {
@@ -387,6 +457,8 @@ function updateFilters() {
             let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px;">`;
             [...visiblePins].reverse().forEach((p) => {
                 const pConfig = categoryConfig[p.category];
+                const isGuestPin = p.user === "Guest"; // mark guest pins
+
                 popupHtml += `
                 <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
                     <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
@@ -395,10 +467,15 @@ function updateFilters() {
                         <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
                         <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
                         <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
-                        ${p.user === "თქვენ" ? `<button onclick="removePinFromStorage('${p.id}')" style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">წაშლა</button>` : ''}
+                        ${(p.user === "თქვენ" || isGuestPin) 
+                            ? `<button onclick="removePinFromStorage('${p.id}')" 
+                                style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">წაშლა</button>` 
+                            : ''}
                     </div>
+                    ${isGuestPin ? `<small style="color:#555;">სტუმრის პინი (ერთჯერადი)</small>` : ''}
                 </div>`;
             });
+
             popupHtml += `</div>`;
             
             marker.bindPopup(popupHtml);
@@ -425,40 +502,96 @@ function updateFilters() {
         const modal = document.getElementById('modal-overlay');
         const pinForm = document.getElementById('pin-form');
 
-        document.getElementById('add-pin-btn').onclick = () => modal.classList.add('active');
+document.getElementById('add-pin-btn').onclick = () => {
+    if (isGuest) {
+        const guestPinData = JSON.parse(localStorage.getItem('guestPin')) || null;
+        const now = Date.now();
+
+        if (guestPinData) {
+            const elapsed = now - guestPinData.timestamp;
+            if (elapsed < GUEST_COOLDOWN) {
+                const remainingMinutes = Math.ceil((GUEST_COOLDOWN - elapsed) / 60000);
+
+                // Show custom modal
+                const modal = document.getElementById('guest-cooldown-modal');
+                const text = document.getElementById('guest-cooldown-text');
+                text.textContent = `თქვენ შეგიძლიათ ახალი პინის დამატება მხოლოდ ${remainingMinutes} წუთში. შეგიძლიათ მხოლოდ არსებული პინის ცვლილება ან წაშლა.`;
+                modal.style.display = 'flex';
+
+                document.getElementById('guest-cooldown-close').onclick = () => {
+                    modal.style.display = 'none';
+                };
+
+                return; // stop here
+            }
+        }
+    }
+
+    modal.classList.add('active');
+};
+
+
         document.getElementById('cancel-btn').onclick = () => modal.classList.remove('active');
 
-        pinForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const file = document.getElementById('media-input').files[0];
-            let fileData = null;
+pinForm.onsubmit = async (e) => {
+    e.preventDefault();
 
-            if (file) {
-                fileData = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => resolve(event.target.result);
-                    reader.readAsDataURL(file);
-                });
+    const file = document.getElementById('media-input').files[0];
+    let fileData = null;
+
+    if (file) {
+        fileData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // --- Guest pin check ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGuest = urlParams.get('guest') === 'true';
+    if (isGuest) {
+        const guestPinData = JSON.parse(localStorage.getItem('guestPin')) || null;
+        const now = Date.now();
+
+        if (guestPinData) {
+            const elapsed = now - guestPinData.timestamp;
+            if (elapsed < GUEST_COOLDOWN) {
+                const remainingMinutes = Math.ceil((GUEST_COOLDOWN - elapsed) / 60000);
+                alert(`თქვენ შეგიძლიათ ახალი პინის დამატება მხოლოდ ${remainingMinutes} წუთში.\nშეგიძლიათ მხოლოდ არსებული პინის ცვლილება ან წაშლა.`);
+                return; // stop submission
             }
+        }
+    }
 
-            const pinData = {
-                id: Date.now().toString(),
-                lat: map.getCenter().lat,
-                lng: map.getCenter().lng,
-                category: document.getElementById('category').value,
-                description: document.getElementById('description').value,
-                image: fileData,
-                status: 0,
-                user: "თქვენ",
-                timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-                rawTimestamp: Date.now()
-            };
+    // --- Build pin object ---
+    const pinData = {
+        id: Date.now().toString(),
+        lat: map.getCenter().lat,
+        lng: map.getCenter().lng,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        image: fileData,
+        status: 0,
+        user: isGuest ? "Guest" : "თქვენ",
+        timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+        rawTimestamp: Date.now()
+    };
 
-            renderPin(pinData);
-            savePinToStorage(pinData);
-            modal.classList.remove('active');
-            pinForm.reset();
-        };
+    renderPin(pinData);
+    savePinToStorage(pinData);
+
+    // --- Store guest pin info for cooldown ---
+    if (isGuest) {
+        localStorage.setItem('guestPin', JSON.stringify({
+            id: pinData.id,
+            timestamp: pinData.rawTimestamp
+        }));
+    }
+
+    modal.classList.remove('active');
+    pinForm.reset();
+};
 
         // --- 7. UTILS & INIT ---
         window.onload = () => {
