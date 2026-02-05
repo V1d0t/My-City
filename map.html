@@ -246,6 +246,14 @@
         // Initialize on load
         const isGuest = initGuestMode();
 
+        // Hide logout button for guests
+        if (isGuest) {
+            const logoutBtn = document.querySelector('.btn-logout');
+            if (logoutBtn) {
+                logoutBtn.style.display = 'none';
+            }
+        }
+
         // Show guest info modal on first entry
         if (isGuest) {
             const urlParams = new URLSearchParams(window.location.search);
