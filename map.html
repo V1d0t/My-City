@@ -189,7 +189,7 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         // --- 1. FIREBASE INITIALIZATION ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -206,63 +206,148 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Security Check
-const urlParams = new URLSearchParams(window.location.search);
-const isGuest = urlParams.get("guest") === "true";
+        // --- GUEST SYSTEM (FIXED) ---
+        // Constants
+        const GUEST_COOLDOWN = 60 * 60 * 1000; // 1 hour in ms
+        const GUEST_SESSION_KEY = 'guestSession';
+        const GUEST_PIN_KEY = 'guestPin';
 
-onAuthStateChanged(auth, (user) => {
-    if (!user && !isGuest) {
-        window.location.href = "login.html";
-        return;
-    }
+        // Initialize guest mode detection with session persistence
+        function initGuestMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlGuestFlag = urlParams.get("guest") === "true";
+            
+            // Check if we have an active guest session
+            const guestSession = JSON.parse(sessionStorage.getItem(GUEST_SESSION_KEY));
+            
+            // Determine if user is guest
+            let isGuest = false;
+            
+            if (urlGuestFlag) {
+                // URL says guest - activate guest mode
+                isGuest = true;
+                sessionStorage.setItem(GUEST_SESSION_KEY, JSON.stringify({
+                    active: true,
+                    startTime: Date.now()
+                }));
+            } else if (guestSession && guestSession.active) {
+                // No URL flag but session exists - maintain guest mode
+                isGuest = true;
+            } else {
+                // Not guest mode - clear any guest data
+                sessionStorage.removeItem(GUEST_SESSION_KEY);
+                localStorage.removeItem(GUEST_PIN_KEY);
+            }
+            
+            window.isGuest = isGuest;
+            return isGuest;
+        }
 
-    if (isGuest) {
-        console.log("Guest mode active");
-    } else {
-        console.log("Logged in as:", user.email);
-    }
+        // Initialize on load
+        const isGuest = initGuestMode();
 
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 400);
-});
+        // Show guest info modal on first entry
+        if (isGuest) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isFirstEntry = urlParams.get("guest") === "true";
+            
+            if (isFirstEntry) {
+                const guestModal = document.getElementById('guest-modal');
+                if (guestModal) {
+                    guestModal.style.display = 'flex';
+                    document.getElementById('guest-modal-close').onclick = () => {
+                        guestModal.style.display = 'none';
+                    };
+                }
+            }
+            
+            // Clean up expired guest pins on load
+            const storedGuestPin = JSON.parse(localStorage.getItem(GUEST_PIN_KEY));
+            if (storedGuestPin) {
+                const elapsed = Date.now() - storedGuestPin.timestamp;
+                if (elapsed >= GUEST_COOLDOWN) {
+                    localStorage.removeItem(GUEST_PIN_KEY);
+                }
+            }
+        }
 
+        // Helper: Get remaining cooldown time in ms
+        function getGuestCooldownRemaining() {
+            const guestPinData = JSON.parse(localStorage.getItem(GUEST_PIN_KEY));
+            if (!guestPinData) return 0;
+            
+            const elapsed = Date.now() - guestPinData.timestamp;
+            const remaining = GUEST_COOLDOWN - elapsed;
+            
+            return remaining > 0 ? remaining : 0;
+        }
 
-        // Global Logout
+        // Helper: Check if guest can place a new pin
+        function canPlaceGuestPin() {
+            if (!window.isGuest) return true; // Not a guest, no restrictions
+            
+            const remaining = getGuestCooldownRemaining();
+            return remaining === 0;
+        }
+
+        // Helper: Show guest cooldown modal
+        function showGuestCooldownModal() {
+            const remainingMs = getGuestCooldownRemaining();
+            if (remainingMs === 0) return;
+            
+            const minutes = Math.ceil(remainingMs / 60000);
+            const modal = document.getElementById('guest-cooldown-modal');
+            const text = document.getElementById('guest-cooldown-text');
+            
+            if (modal && text) {
+                text.textContent = `თქვენ შეგიძლიათ ახალი პინის დამატება მხოლოდ ${minutes} წუთში. შეგიძლიათ მხოლოდ არსებული პინის ცვლილება ან წაშლა.`;
+                modal.style.display = 'flex';
+                
+                const closeBtn = document.getElementById('guest-cooldown-close');
+                if (closeBtn) {
+                    closeBtn.onclick = () => modal.style.display = 'none';
+                }
+            }
+        }
+
+        // Security Check - UPDATED
+        onAuthStateChanged(auth, (user) => {
+            const isGuest = window.isGuest; // Use our initialized guest flag
+            
+            if (!user && !isGuest) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (isGuest) {
+                console.log("Guest mode active");
+            } else if (user) {
+                console.log("Logged in as:", user.email);
+            }
+
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 400);
+        });
+
+        // Global Logout - UPDATED
         window.logoutUser = () => {
             if (confirm("ნამდვილად გსურთ გასვლა?")) {
+                // Clear guest session
+                sessionStorage.removeItem(GUEST_SESSION_KEY);
+                localStorage.removeItem(GUEST_PIN_KEY);
+                
+                // Sign out from Firebase
                 signOut(auth).then(() => {
                     window.location.href = "index.html";
                 }).catch((error) => console.error("Logout Error:", error));
             }
         };
 
-// ----------- Guest Info ------------------
-(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isGuest = urlParams.get('guest') === 'true';
-    window.isGuest = isGuest; // global flag if needed later
-
-    if (isGuest) {
-        const modal = document.getElementById('guest-modal');
-        const closeBtn = document.getElementById('guest-modal-close');
-        modal.style.display = 'flex';
-
-        closeBtn.onclick = () => {
-            modal.style.display = 'none';
-        };
-    }
-})();
-
-
-
         // --- 2. CONFIGURATION ---
         const GEORGIA_BOUNDS = [[41.056, 40.999], [43.760, 46.920]];
         const KUTAISI_CENTER = [42.2667, 42.7167];
         const EXPIRATION_TIME = 90 * 60 * 1000;
-        // Guest pin cooldown (1 hour)
-        const GUEST_COOLDOWN = 60 * 60 * 1000; // 1 hour in ms
-
 
         const STATUS_CONFIG = {
             0: { label: "დაფიქსირებულია", class: "red" },
@@ -326,166 +411,163 @@ onAuthStateChanged(auth, (user) => {
             localStorage.setItem('mapPins', JSON.stringify(pins));
         }
 
-// helper: rebuild markers from localStorage without reloading page
-function rebuildMarkersFromStorage() {
-    // 1. Remove markers from map
-    Object.keys(markerGroups).forEach(key => {
-        if (markerGroups[key].markerInstance) {
-            map.removeLayer(markerGroups[key].markerInstance);
+        // helper: rebuild markers from localStorage without reloading page
+        function rebuildMarkersFromStorage() {
+            // 1. Remove markers from map
+            Object.keys(markerGroups).forEach(key => {
+                if (markerGroups[key].markerInstance) {
+                    map.removeLayer(markerGroups[key].markerInstance);
+                }
+            });
+
+            // 2. Clear the memory
+            markerGroups = {};
+            activeMarkers = [];
+
+            // 3. Re-render everything from scratch
+            const pins = getSavedPins();
+            pins.forEach(p => renderPin(p));
+            
+            updateFilters();
         }
-    });
 
-    // 2. Clear the memory
-    markerGroups = {};
-    activeMarkers = [];
-
-    // 3. Re-render everything from scratch
-    const pins = getSavedPins();
-    pins.forEach(p => renderPin(p));
-    
-    updateFilters();
-}
-
-    // replace removePinFromStorage: no full reload 
-window.removePinFromStorage = (id) => {
-    let pins = getSavedPins();
-    const removedPin = pins.find(p => p.id === id);
-
-    // Remove the pin from storage
-    pins = pins.filter(p => p.id !== id);
-    localStorage.setItem('mapPins', JSON.stringify(pins));
-
-    // Check if the removed pin is the guest pin
-    const guestPinData = JSON.parse(localStorage.getItem('guestPin'));
-    if (guestPinData && guestPinData.id === id) {
-        localStorage.removeItem('guestPin'); // clear guest cooldown
-        window.isGuestPinPlaced = false; // optional flag
-    }
-
-    rebuildMarkersFromStorage();
-};
-
-
-    // replace changePinStatus: update storage and refresh markers without reload
-    window.changePinStatus = (id, newStatus) => {
-        let pins = getSavedPins();
-        const pin = pins.find(p => p.id === id);
-        if (pin) {
-            pin.status = newStatus;
+        // Remove Pin - UPDATED to handle guest pin removal
+        window.removePinFromStorage = (id) => {
+            let pins = getSavedPins();
+            
+            // Remove from storage
+            pins = pins.filter(p => p.id !== id);
             localStorage.setItem('mapPins', JSON.stringify(pins));
-            rebuildMarkersFromStorage();
-        }
-    };
 
-    // change clear-all-pins handler to avoid reload
-    document.getElementById('clear-all-pins').onclick = () => {
-        if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
-            localStorage.removeItem('mapPins');
+            // Clear guest pin cooldown if this was the guest's pin
+            const guestPinData = JSON.parse(localStorage.getItem(GUEST_PIN_KEY));
+            if (guestPinData && guestPinData.id === id) {
+                localStorage.removeItem(GUEST_PIN_KEY);
+            }
+
             rebuildMarkersFromStorage();
-        }
-    };
+        };
+
+        // Change Pin Status
+        window.changePinStatus = (id, newStatus) => {
+            let pins = getSavedPins();
+            const pin = pins.find(p => p.id === id);
+            if (pin) {
+                pin.status = newStatus;
+                localStorage.setItem('mapPins', JSON.stringify(pins));
+                rebuildMarkersFromStorage();
+            }
+        };
+
+        // Clear All Pins
+        document.getElementById('clear-all-pins').onclick = () => {
+            if (confirm("დარწმუნებული ხართ, რომ გსურთ ყველა თქვენი პინის წაშლა?")) {
+                localStorage.removeItem('mapPins');
+                rebuildMarkersFromStorage();
+            }
+        };
 
         // --- 5. RENDERING ---
-function renderPin(pinData) {
-    const newLatLng = L.latLng(pinData.lat, pinData.lng);
-    let foundGroupKey = null;
+        function renderPin(pinData) {
+            const newLatLng = L.latLng(pinData.lat, pinData.lng);
+            let foundGroupKey = null;
 
-    // 1. Find if a group exists within 15 meters
-    for (const posKey in markerGroups) {
-        const [lat, lng] = posKey.split(',').map(Number);
-        if (newLatLng.distanceTo(L.latLng(lat, lng)) < 15) { 
-            foundGroupKey = posKey;
-            break; 
+            // 1. Find if a group exists within 15 meters
+            for (const posKey in markerGroups) {
+                const [lat, lng] = posKey.split(',').map(Number);
+                if (newLatLng.distanceTo(L.latLng(lat, lng)) < 15) { 
+                    foundGroupKey = posKey;
+                    break; 
+                }
+            }
+
+            const posKey = foundGroupKey || `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
+            if (!markerGroups[posKey]) markerGroups[posKey] = [];
+
+            // 2. Add pin to group
+            const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
+            if (existingIndex !== -1) markerGroups[posKey][existingIndex] = pinData;
+            else markerGroups[posKey].push(pinData);
+
+            // 3. Ensure a marker instance exists for this group
+            if (!markerGroups[posKey].markerInstance) {
+                const firstPin = markerGroups[posKey][0];
+                markerGroups[posKey].markerInstance = L.marker([firstPin.lat, firstPin.lng]).addTo(map);
+            }
+
+            updateFilters(); // Always refresh visibility after adding
         }
-    }
 
-    const posKey = foundGroupKey || `${pinData.lat.toFixed(6)},${pinData.lng.toFixed(6)}`;
-    if (!markerGroups[posKey]) markerGroups[posKey] = [];
+        function updateFilters() {
+            // Get values of checked categories and statuses
+            const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
+            const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => parseInt(cb.value.split('-')[1]));
 
-    // 2. Add pin to group
-    const existingIndex = markerGroups[posKey].findIndex(p => p.id === pinData.id);
-    if (existingIndex !== -1) markerGroups[posKey][existingIndex] = pinData;
-    else markerGroups[posKey].push(pinData);
+            Object.keys(markerGroups).forEach(posKey => {
+                const group = markerGroups[posKey];
+                const marker = group.markerInstance;
+                if (!marker) return;
 
-    // 3. Ensure a marker instance exists for this group
-    if (!markerGroups[posKey].markerInstance) {
-        const firstPin = markerGroups[posKey][0];
-        markerGroups[posKey].markerInstance = L.marker([firstPin.lat, firstPin.lng]).addTo(map);
-    }
+                // Filter pins inside this group based on checkboxes
+                const visiblePins = group.filter(p => {
+                    const categoryMatch = checkedGroups.includes(categoryConfig[p.category].group);
+                    const statusMatch = checkedStatuses.includes(p.status || 0);
+                    return categoryMatch && statusMatch;
+                });
 
-    updateFilters(); // Always refresh visibility after adding
-}
+                if (visiblePins.length > 0) {
+                    // Show marker and update its icon based on the newest visible pin
+                    const topPin = [...visiblePins].reverse()[0]; 
+                    const config = categoryConfig[topPin.category];
+                    const pStatus = STATUS_CONFIG[topPin.status || 0];
+                    const dotCol = pStatus.class === 'red' ? '#ef4444' : pStatus.class === 'yellow' ? '#f59e0b' : '#22c55e';
 
-function updateFilters() {
-    // Get values of checked categories and statuses
-    const checkedGroups = Array.from(document.querySelectorAll('.filter-check:not([value^="status-"]):checked')).map(cb => cb.value);
-    const checkedStatuses = Array.from(document.querySelectorAll('.filter-check[value^="status-"]:checked')).map(cb => parseInt(cb.value.split('-')[1]));
+                    const newIcon = L.divIcon({
+                        className: 'custom-pin',
+                        html: `<div style="background-color: ${config.color}; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+                                <span style="transform: rotate(45deg); font-size: 20px;">${config.icon}</span>
+                                <div style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:${dotCol}; border-radius:50%; border:2px solid white; transform:rotate(45deg);"></div>
+                                ${visiblePins.length > 1 ? `<div style="position:absolute; top:-5px; right:-5px; background:black; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; transform:rotate(45deg); border:1px solid white;">${visiblePins.length}</div>` : ''}
+                               </div>`,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 36]
+                    });
 
-    Object.keys(markerGroups).forEach(posKey => {
-        const group = markerGroups[posKey];
-        const marker = group.markerInstance;
-        if (!marker) return;
+                    marker.setIcon(newIcon);
+                    
+                    // Build the Popup HTML
+                    let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px;">`;
+                    [...visiblePins].reverse().forEach((p) => {
+                        const pConfig = categoryConfig[p.category];
+                        const isGuestPin = p.user === "Guest"; // mark guest pins
 
-        // Filter pins inside this group based on checkboxes
-        const visiblePins = group.filter(p => {
-            const categoryMatch = checkedGroups.includes(categoryConfig[p.category].group);
-            const statusMatch = checkedStatuses.includes(p.status || 0);
-            return categoryMatch && statusMatch;
-        });
+                        popupHtml += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                            <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
+                            <p style="margin: 5px 0; font-size: 13px;">${p.description || 'აღწერა არ არის...'}</p>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
+                                <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
+                                <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
+                                ${(p.user === "თქვენ" || isGuestPin) 
+                                    ? `<button onclick="removePinFromStorage('${p.id}')" 
+                                        style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">წაშლა</button>` 
+                                    : ''}
+                            </div>
+                            ${isGuestPin ? `<small style="color:#555;">სტუმრის პინი (ერთჯერადი)</small>` : ''}
+                        </div>`;
+                    });
 
-        if (visiblePins.length > 0) {
-            // Show marker and update its icon based on the newest visible pin
-            const topPin = [...visiblePins].reverse()[0]; 
-            const config = categoryConfig[topPin.category];
-            const pStatus = STATUS_CONFIG[topPin.status || 0];
-            const dotCol = pStatus.class === 'red' ? '#ef4444' : pStatus.class === 'yellow' ? '#f59e0b' : '#22c55e';
-
-            const newIcon = L.divIcon({
-                className: 'custom-pin',
-                html: `<div style="background-color: ${config.color}; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
-                        <span style="transform: rotate(45deg); font-size: 20px;">${config.icon}</span>
-                        <div style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:${dotCol}; border-radius:50%; border:2px solid white; transform:rotate(45deg);"></div>
-                        ${visiblePins.length > 1 ? `<div style="position:absolute; top:-5px; right:-5px; background:black; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; transform:rotate(45deg); border:1px solid white;">${visiblePins.length}</div>` : ''}
-                       </div>`,
-                iconSize: [36, 36],
-                iconAnchor: [18, 36]
+                    popupHtml += `</div>`;
+                    
+                    marker.bindPopup(popupHtml);
+                    if (!map.hasLayer(marker)) map.addLayer(marker);
+                } else {
+                    // Hide marker if no pins inside match the filter
+                    map.removeLayer(marker);
+                }
             });
-
-            marker.setIcon(newIcon);
-            
-            // Build the Popup HTML
-            let popupHtml = `<div style="max-height: 250px; overflow-y: auto; min-width: 220px;">`;
-            [...visiblePins].reverse().forEach((p) => {
-                const pConfig = categoryConfig[p.category];
-                const isGuestPin = p.user === "Guest"; // mark guest pins
-
-                popupHtml += `
-                <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                    <strong style="color: ${pConfig.color}">${pConfig.icon} ${p.category}</strong>
-                    <p style="margin: 5px 0; font-size: 13px;">${p.description || 'აღწერა არ არის...'}</p>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="changePinStatus('${p.id}', 0)">🔴</button>
-                        <button onclick="changePinStatus('${p.id}', 1)">🟡</button>
-                        <button onclick="changePinStatus('${p.id}', 2)">🟢</button>
-                        ${(p.user === "თქვენ" || isGuestPin) 
-                            ? `<button onclick="removePinFromStorage('${p.id}')" 
-                                style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">წაშლა</button>` 
-                            : ''}
-                    </div>
-                    ${isGuestPin ? `<small style="color:#555;">სტუმრის პინი (ერთჯერადი)</small>` : ''}
-                </div>`;
-            });
-
-            popupHtml += `</div>`;
-            
-            marker.bindPopup(popupHtml);
-            if (!map.hasLayer(marker)) map.addLayer(marker);
-        } else {
-            // Hide marker if no pins inside match the filter
-            map.removeLayer(marker);
         }
-    });
-}
 
         // --- 6. UI ACTIONS ---
         window.openMedia = (url, type) => {
@@ -502,96 +584,70 @@ function updateFilters() {
         const modal = document.getElementById('modal-overlay');
         const pinForm = document.getElementById('pin-form');
 
-document.getElementById('add-pin-btn').onclick = () => {
-    if (isGuest) {
-        const guestPinData = JSON.parse(localStorage.getItem('guestPin')) || null;
-        const now = Date.now();
-
-        if (guestPinData) {
-            const elapsed = now - guestPinData.timestamp;
-            if (elapsed < GUEST_COOLDOWN) {
-                const remainingMinutes = Math.ceil((GUEST_COOLDOWN - elapsed) / 60000);
-
-                // Show custom modal
-                const modal = document.getElementById('guest-cooldown-modal');
-                const text = document.getElementById('guest-cooldown-text');
-                text.textContent = `თქვენ შეგიძლიათ ახალი პინის დამატება მხოლოდ ${remainingMinutes} წუთში. შეგიძლიათ მხოლოდ არსებული პინის ცვლილება ან წაშლა.`;
-                modal.style.display = 'flex';
-
-                document.getElementById('guest-cooldown-close').onclick = () => {
-                    modal.style.display = 'none';
-                };
-
-                return; // stop here
+        // Add Pin Button - UPDATED with guest cooldown check
+        document.getElementById('add-pin-btn').onclick = () => {
+            if (window.isGuest && !canPlaceGuestPin()) {
+                showGuestCooldownModal();
+                return;
             }
-        }
-    }
-
-    modal.classList.add('active');
-};
-
+            
+            // Open pin modal as usual
+            modal.classList.add('active');
+        };
 
         document.getElementById('cancel-btn').onclick = () => modal.classList.remove('active');
 
-pinForm.onsubmit = async (e) => {
-    e.preventDefault();
+        // Pin Form Submission - UPDATED with guest cooldown check
+        pinForm.onsubmit = async (e) => {
+            e.preventDefault();
 
-    const file = document.getElementById('media-input').files[0];
-    let fileData = null;
-
-    if (file) {
-        fileData = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (event) => resolve(event.target.result);
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // --- Guest pin check ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const isGuest = urlParams.get('guest') === 'true';
-    if (isGuest) {
-        const guestPinData = JSON.parse(localStorage.getItem('guestPin')) || null;
-        const now = Date.now();
-
-        if (guestPinData) {
-            const elapsed = now - guestPinData.timestamp;
-            if (elapsed < GUEST_COOLDOWN) {
-                const remainingMinutes = Math.ceil((GUEST_COOLDOWN - elapsed) / 60000);
-                alert(`თქვენ შეგიძლიათ ახალი პინის დამატება მხოლოდ ${remainingMinutes} წუთში.\nშეგიძლიათ მხოლოდ არსებული პინის ცვლილება ან წაშლა.`);
-                return; // stop submission
+            // Guest cooldown check
+            if (window.isGuest && !canPlaceGuestPin()) {
+                showGuestCooldownModal();
+                return;
             }
-        }
-    }
 
-    // --- Build pin object ---
-    const pinData = {
-        id: Date.now().toString(),
-        lat: map.getCenter().lat,
-        lng: map.getCenter().lng,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        image: fileData,
-        status: 0,
-        user: isGuest ? "Guest" : "თქვენ",
-        timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-        rawTimestamp: Date.now()
-    };
+            // Handle file upload
+            const file = document.getElementById('media-input').files[0];
+            let fileData = null;
+            if (file) {
+                fileData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
 
-    renderPin(pinData);
-    savePinToStorage(pinData);
+            // Build pin object
+            const pinData = {
+                id: Date.now().toString(),
+                lat: map.getCenter().lat,
+                lng: map.getCenter().lng,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                image: fileData,
+                status: 0,
+                user: window.isGuest ? "Guest" : "თქვენ",
+                timestamp: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+                rawTimestamp: Date.now()
+            };
 
-    // --- Store guest pin info for cooldown ---
-    if (isGuest) {
-        localStorage.setItem('guestPin', JSON.stringify({
-            id: pinData.id,
-            timestamp: pinData.rawTimestamp
-        }));
-    }
+            // Render and save
+            renderPin(pinData);
+            savePinToStorage(pinData);
 
-    modal.classList.remove('active');
-    pinForm.reset();
-};
+            // Store guest pin info for cooldown
+            if (window.isGuest) {
+                localStorage.setItem(GUEST_PIN_KEY, JSON.stringify({
+                    id: pinData.id,
+                    timestamp: pinData.rawTimestamp
+                }));
+            }
+
+            // Close modal and reset
+            modal.classList.remove('active');
+            pinForm.reset();
+        };
 
         // --- 7. UTILS & INIT ---
         window.onload = () => {
